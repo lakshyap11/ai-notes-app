@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-teal-600 to-emerald-500 shadow-md shadow-teal-500/20">
               <span className="text-sm font-bold text-white tracking-wide">A</span>
             </div>
-            <h1 className="text-lg font-semibold tracking-tight text-white bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+            <h1 className="text-lg font-bold tracking-wider font-serif text-white bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
               AetherNote<span className="text-teal-400 font-bold">.ai</span>
             </h1>
           </div>
@@ -180,20 +180,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div
                   key={note.id}
                   onClick={() => onSelectNote(note.id)}
-                  className={`group relative flex flex-col items-start gap-1 rounded-xl p-3.5 cursor-pointer border transition-all duration-300 select-none ${
+                  className={`group relative flex flex-col items-start gap-1 rounded-xl p-3.5 cursor-pointer border transition-all duration-500 ease-out select-none hover:translate-y-[-1px] ${
                     isActive
                       ? isConv
-                        ? "bg-amber-950/20 border-amber-500/20 text-white"
-                        : "bg-teal-950/20 border-teal-500/20 text-white"
-                      : "border-transparent text-zinc-400 hover:bg-white/[0.02] hover:text-zinc-200 hover:border-white/[0.03]"
+                        ? "bg-amber-950/25 border-amber-500/30 text-white shadow-[inset_0_1px_12px_rgba(245,158,11,0.08),0_4px_16px_rgba(0,0,0,0.35)]"
+                        : "bg-teal-950/25 border-teal-500/30 text-white shadow-[inset_0_1px_12px_rgba(20,184,166,0.08),0_4px_16px_rgba(0,0,0,0.35)]"
+                      : "border-transparent text-zinc-400 hover:bg-white/[0.03] hover:border-white/[0.06] hover:text-zinc-250 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                   }`}
                 >
                   <div className="flex w-full items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                       {isConv ? (
-                        <MessageSquareIcon size={12} className={isActive ? "text-amber-400 shrink-0" : "text-zinc-500 shrink-0"} />
+                        <MessageSquareIcon size={12} className={isActive ? "text-amber-400 shrink-0 animate-pulse" : "text-zinc-500 shrink-0 group-hover:text-amber-400 transition-colors"} />
                       ) : (
-                        <FileTextIcon size={12} className={isActive ? "text-teal-400 shrink-0" : "text-zinc-500 shrink-0"} />
+                        <FileTextIcon size={12} className={isActive ? "text-teal-400 shrink-0" : "text-zinc-500 shrink-0 group-hover:text-teal-400 transition-colors"} />
                       )}
                       <h3
                         className={`text-xs font-semibold truncate ${
@@ -218,7 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <TrashIcon size={13} />
                     </button>
                   </div>
-
+ 
                   <p className="text-[11px] leading-relaxed text-zinc-500 truncate w-full pr-4">
                     {isConv 
                       ? note.messages && note.messages.length > 0 
@@ -226,11 +226,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                         : "No reflection messages yet"
                       : plainSnippet || "No content yet"}
                   </p>
-
+ 
                   <div className="flex w-full items-center justify-between text-[9px] text-zinc-600 mt-2 font-mono">
                     <span>{note.updatedAt}</span>
                     {isActive && (
-                      <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${isConv ? "bg-amber-400" : "bg-teal-400"}`}></span>
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full animate-pulse`}
+                        style={{
+                          backgroundColor: isConv ? "#fbbf24" : "#2dd4bf",
+                          boxShadow: isConv ? "0 0 10px #fbbf24" : "0 0 10px #2dd4bf",
+                        }}
+                      ></span>
                     )}
                   </div>
                 </div>

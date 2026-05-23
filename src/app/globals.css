@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @font-face {
   font-family: 'Wagon';
   src: url('/fonts/Wagon-ExtraLight.otf') format('opentype');
@@ -66,22 +68,78 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, .logo-text {
-  font-family: 'Wagon', sans-serif;
+h1, h2, h3, .logo-text, .serif-heading {
+  font-family: 'Wagon', 'Cinzel', 'Playfair Display', serif;
+  letter-spacing: -0.01em;
 }
+
+/* Premium Text Selection & Caret Styling */
+::selection {
+  background-color: rgba(20, 184, 166, 0.2); /* elegant teal selection bloom */
+  color: #ffffff;
+}
+
+textarea, input {
+  caret-color: var(--accent-teal); /* elegant teal caret */
+}
+
+/* Caret amber for conversational modes */
+.caret-amber textarea, .caret-amber input, .caret-amber-all {
+  caret-color: var(--accent-amber) !important;
+}
+
 /* Glassmorphism utility classes */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+  background: rgba(8, 14, 18, 0.72); /* deep translucent obsidian-teal backdrop */
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0px 0 rgba(255, 255, 255, 0.015);
 }
 
 .glass-panel-light {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.01), 0 4px 20px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Soft ambient center spotlight behind write-canvas */
+.editor-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 28%, rgba(20, 184, 166, 0.045), transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Premium button hover light glare swipe */
+.btn-premium-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-premium-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  transform: skewX(-25deg);
+  transition: none;
+}
+
+.btn-premium-sweep:hover::after {
+  left: 150%;
+  transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Cinematic background glows */

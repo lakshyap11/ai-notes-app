@@ -241,7 +241,7 @@ const Editor: React.FC<EditorProps> = ({
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600/20 to-indigo-500/20 text-violet-400 border border-violet-500/10">
             <SparklesIcon size={26} className="animate-pulse" />
           </div>
-          <h2 className="text-lg font-medium text-zinc-200">No active note selected</h2>
+          <h2 className="text-xl font-bold tracking-wide font-serif text-zinc-200">No active note selected</h2>
           <p className="text-xs text-zinc-500 max-w-sm">
             Select an existing note from the sidebar or click the "New Note" button to start crafting your next masterpiece.
           </p>
@@ -302,10 +302,10 @@ const Editor: React.FC<EditorProps> = ({
               <button
                 onClick={() => onAIAction("refine")}
                 disabled={!!isProcessing}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
                   isProcessing === "refine"
                     ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
-                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300"
                 }`}
               >
                 <SparklesIcon size={11} className={isProcessing === "refine" ? "animate-spin" : ""} />
@@ -315,10 +315,10 @@ const Editor: React.FC<EditorProps> = ({
               <button
                 onClick={() => onAIAction("summarize")}
                 disabled={!!isProcessing}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
                   isProcessing === "summarize"
                     ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
-                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300"
                 }`}
               >
                 <AlignLeftIcon size={11} className={isProcessing === "summarize" ? "animate-pulse" : ""} />
@@ -328,10 +328,10 @@ const Editor: React.FC<EditorProps> = ({
               <button
                 onClick={() => onAIAction("professional")}
                 disabled={!!isProcessing}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
                   isProcessing === "professional"
                     ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
-                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300"
                 }`}
               >
                 <EyeIcon size={11} className={isProcessing === "professional" ? "animate-bounce" : ""} />
@@ -341,10 +341,10 @@ const Editor: React.FC<EditorProps> = ({
               <button
                 onClick={() => onAIAction("autocomplete")}
                 disabled={!!isProcessing}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
                   isProcessing === "autocomplete"
                     ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
-                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300"
                 }`}
               >
                 <ZapIcon size={11} className={isProcessing === "autocomplete" ? "animate-ping" : ""} />
@@ -356,9 +356,9 @@ const Editor: React.FC<EditorProps> = ({
           <button
             onClick={onToggleTalkMode}
             disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-300 cursor-pointer disabled:opacity-50 ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-bold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
               activeNote.type === "conversation" && activeNote.talkModeEnabled !== false
-                ? "bg-amber-950/35 border border-amber-500/45 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.12)]"
+                ? "bg-amber-950/35 border border-amber-500/45 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
                 : activeNote.type === "conversation" && activeNote.talkModeEnabled === false
                 ? "bg-stone-900/30 border border-stone-700/40 text-zinc-400 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-300"
                 : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-300"
@@ -388,7 +388,7 @@ const Editor: React.FC<EditorProps> = ({
           <button
             onClick={triggerFileUpload}
             disabled={!!isProcessing}
-            className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-300 cursor-pointer disabled:opacity-50 bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-355 active:scale-95 shadow-md"
+            className="flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-bold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 shadow-md"
             title="Attach voice note, image, PDF or document"
           >
             <PaperclipIcon size={11} className="text-teal-400" />
@@ -412,7 +412,7 @@ const Editor: React.FC<EditorProps> = ({
               value={activeNote.title}
               onChange={(e) => onUpdateNote({ title: e.target.value })}
               placeholder="Untitled Conversation"
-              className="w-full bg-transparent text-xl md:text-2xl font-bold tracking-tight text-white placeholder-zinc-600 outline-none border-b border-transparent focus:border-white/[0.02] pb-2 transition-all duration-200 shrink-0 select-text"
+              className="w-full bg-transparent text-xl md:text-2xl font-bold tracking-wide font-serif text-white placeholder-zinc-600 outline-none border-b border-transparent focus:border-white/[0.02] pb-2 transition-all duration-200 shrink-0 select-text"
             />
 
             {/* Elegant Minimalist Header Bar */}
@@ -477,8 +477,8 @@ const Editor: React.FC<EditorProps> = ({
                       <div
                         className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 text-xs md:text-sm leading-relaxed border transition-all duration-300 ${
                           isUser
-                            ? "bg-stone-900/45 border-stone-700/30 text-zinc-100 rounded-tr-none shadow-lg shadow-black/10 glass-panel-light"
-                            : "bg-teal-950/15 border-teal-500/20 text-zinc-200 rounded-tl-none shadow-lg shadow-teal-950/10 glass-panel-light"
+                            ? "bg-[#1c1b1a]/45 border-[#2c2b2a]/30 text-zinc-100 rounded-tr-none shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:border-white/[0.08] hover:bg-[#1c1b1a]/60 glass-panel-light"
+                            : "bg-[#0d1f21]/40 border-teal-500/20 text-zinc-200 rounded-tl-none shadow-[0_0_20px_rgba(20,184,166,0.05)] hover:border-teal-500/30 hover:bg-[#0d1f21]/55 glass-panel-light"
                         }`}
                       >
                         {renderBubbleText(msg.text)}
@@ -505,7 +505,7 @@ const Editor: React.FC<EditorProps> = ({
                   <span className="text-[10px] font-sans font-medium text-zinc-500 mb-1.5 px-2 tracking-wider uppercase opacity-60 select-none">
                     Friend
                   </span>
-                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-teal-950/15 border border-teal-500/20 text-zinc-300 flex items-center gap-1.5 glass-panel-light shadow-lg shadow-teal-950/10">
+                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-[#0d1f21]/40 border border-teal-500/20 text-zinc-300 flex items-center gap-1.5 glass-panel-light shadow-[0_0_20px_rgba(20,184,166,0.05)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '150ms' }}></span>
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '300ms' }}></span>
@@ -539,19 +539,19 @@ const Editor: React.FC<EditorProps> = ({
                 >
                   <PaperclipIcon size={16} className="text-zinc-400 group-hover:text-teal-400 transition-colors" />
                 </button>
-                <div className="relative flex-1 flex items-center">
+                <div className="relative flex-1 flex items-center caret-amber">
                   <input
                     name="chatInput"
                     type="text"
                     placeholder="Reflect with a thoughtful friend..."
                     disabled={isAITyping}
                     autoComplete="off"
-                    className="w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] py-3.5 pl-5 pr-14 text-xs md:text-sm text-white placeholder-zinc-500 outline-none transition-all duration-200 focus:border-teal-500/50 focus:bg-white/[0.04] focus:ring-1 focus:ring-teal-500/30 disabled:opacity-50 font-sans"
+                    className="w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] py-3.5 pl-5 pr-14 text-xs md:text-sm text-white placeholder-zinc-500 outline-none transition-all duration-200 focus:border-amber-500/40 focus:bg-white/[0.04] focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 font-sans"
                   />
                   <button
                     type="submit"
                     disabled={isAITyping}
-                    className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-md shadow-teal-500/20"
+                    className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-md shadow-amber-500/20"
                     title="Send Message"
                   >
                     <SendIcon size={14} />
@@ -569,7 +569,7 @@ const Editor: React.FC<EditorProps> = ({
               value={activeNote.title}
               onChange={(e) => onUpdateNote({ title: e.target.value })}
               placeholder="Untitled Note"
-              className="w-full bg-transparent text-2xl md:text-3xl font-bold tracking-tight text-white placeholder-zinc-700 outline-none border-b border-transparent focus:border-white/[0.03] pb-4 transition-all duration-200 shrink-0 select-text"
+              className="w-full bg-transparent text-2xl md:text-3xl font-bold tracking-wide font-serif text-white placeholder-zinc-700 outline-none border-b border-transparent focus:border-white/[0.03] pb-4 transition-all duration-200 shrink-0 select-text"
             />
 
             {/* Standard Note Memory Blocks Grid */}
@@ -590,13 +590,16 @@ const Editor: React.FC<EditorProps> = ({
               </div>
             )}
 
-            {/* Editor Body Text */}
-            <textarea
-              value={activeNote.content}
-              onChange={(e) => onUpdateNote({ content: e.target.value })}
-              placeholder="Start writing or typing '/' for commands..."
-              className="flex-1 w-full bg-transparent text-sm md:text-base leading-relaxed text-zinc-300 placeholder-zinc-600 outline-none resize-none focus:placeholder-zinc-500 font-sans min-h-[300px]"
-            />
+            {/* Editor Body Text with Soft Illuminated Glow */}
+            <div className="relative flex-1 w-full">
+              <div className="editor-spotlight" />
+              <textarea
+                value={activeNote.content}
+                onChange={(e) => onUpdateNote({ content: e.target.value })}
+                placeholder="Start writing or typing '/' for commands..."
+                className="relative z-10 w-full h-full bg-transparent text-sm md:text-base leading-relaxed text-zinc-300 placeholder-zinc-600 outline-none resize-none focus:placeholder-zinc-500 font-sans min-h-[300px]"
+              />
+            </div>
           </div>
         )}
       </div>

@@ -46,7 +46,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
           </div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-wider font-serif text-white bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent">
               AetherNote<span className="text-teal-400 font-bold">.ai</span>
             </h1>
             <p className="text-sm md:text-base text-zinc-400 max-w-md mx-auto leading-relaxed font-sans font-medium">
@@ -58,14 +58,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <button
               onClick={onStartWriting}
-              className="relative flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-500/10 hover:shadow-teal-500/20 border border-teal-400/20 hover:border-teal-400/40 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
+              className="relative flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-500/10 hover:shadow-teal-500/20 border border-teal-400/20 hover:border-teal-400/40 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group btn-premium-sweep"
             >
               <span>Start Writing</span>
             </button>
 
             <button
               onClick={scrollToFeatures}
-              className="flex items-center gap-2 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.1] px-6 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.1] px-6 py-3 text-sm font-semibold text-zinc-300 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer btn-premium-sweep"
             >
               <span>Explore Features</span>
               <ArrowDownIcon size={14} className="animate-bounce" />
@@ -77,68 +77,68 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
         <section ref={featuresRef} className="w-full space-y-12 animate-chat-bubble scroll-mt-10">
           <div className="text-center space-y-2 select-none">
             <h2 className="text-xs font-bold tracking-widest text-teal-400 font-mono uppercase">Core Architecture</h2>
-            <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">An intelligent journaling & thought companion</h3>
+            <h3 className="text-2xl md:text-3xl font-bold tracking-wide font-serif text-white tracking-tight">An intelligent journaling & thought companion</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Feature 1: Smart Notes */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-teal-950/5">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <FileTextIcon size={18} />
               </div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-teal-300 transition-colors">Smart Notes</h4>
+              <h4 className="text-sm font-bold font-serif text-white group-hover:text-teal-300 transition-colors tracking-wide">Smart Notes</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Create elegant local notes with distraction-free typography and real-time auto-saving. Perfect for capture, drafts, and reflection.
               </p>
             </div>
 
             {/* Feature 2: Refine Draft */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-teal-950/5">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <SparklesIcon size={18} />
               </div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-teal-300 transition-colors">Refine Draft</h4>
+              <h4 className="text-sm font-bold font-serif text-white group-hover:text-teal-300 transition-colors tracking-wide">Refine Draft</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Tidy up sentence structures, simplify complex phrasing, and enhance readability instantly without losing your original writing style.
               </p>
             </div>
 
             {/* Feature 3: Summarize */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-teal-950/5">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <AlignLeftIcon size={18} />
               </div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-teal-300 transition-colors">Summarize</h4>
+              <h4 className="text-sm font-bold font-serif text-white group-hover:text-teal-300 transition-colors tracking-wide">Summarize</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Extract key bullet points and synthesize lengthy, unorganized streams of consciousness into clean, concise visual executive summaries.
               </p>
             </div>
 
             {/* Feature 4: Formal Polish */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-teal-950/5">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <EyeIcon size={18} />
               </div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-teal-300 transition-colors">Formal Polish</h4>
+              <h4 className="text-sm font-bold font-serif text-white group-hover:text-teal-300 transition-colors tracking-wide">Formal Polish</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Correct minor grammar inconsistencies and elevate messy thoughts into professional, highly presentable structures.
               </p>
             </div>
 
             {/* Feature 5: Autocomplete */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/[0.06] transition-all duration-300 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-teal-950/5">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <ZapIcon size={18} />
               </div>
-              <h4 className="text-sm font-semibold text-white group-hover:text-teal-300 transition-colors">Autocomplete</h4>
+              <h4 className="text-sm font-bold font-serif text-white group-hover:text-teal-300 transition-colors tracking-wide">Autocomplete</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Stuck on a sentence? The AI evaluates the active context of your draft and appends relevant continuation lines seamlessly.
               </p>
             </div>
 
             {/* Feature 6: Talk Mode - MOST IMPORTANT */}
-            <div className="group col-span-1 md:col-span-2 lg:col-span-3 rounded-2xl p-6 border border-amber-500/20 bg-amber-500/[0.01] hover:bg-amber-500/[0.02] hover:border-amber-500/40 transition-all duration-300 space-y-5 shadow-lg shadow-amber-950/5 glass-panel-light relative overflow-hidden">
+            <div className="group col-span-1 md:col-span-2 lg:col-span-3 rounded-2xl p-6 border border-amber-500/20 bg-amber-500/[0.01] hover:bg-[#121008]/40 hover:border-amber-500/40 transition-all duration-500 space-y-5 shadow-lg shadow-amber-950/5 glass-panel-light relative overflow-hidden hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]">
               <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-amber-500/[0.03] blur-2xl group-hover:bg-amber-500/[0.06] transition-colors pointer-events-none"></div>
               
               <div className="flex items-center gap-3">
@@ -151,7 +151,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
               </div>
               
               <div className="space-y-2">
-                <h4 className="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">Talk Mode</h4>
+                <h4 className="text-lg font-bold font-serif text-white group-hover:text-amber-300 transition-colors tracking-wide">Talk Mode</h4>
                 <p className="text-xs md:text-sm text-zinc-300 leading-relaxed max-w-2xl">
                   <strong>The note itself becomes conversational.</strong> Toggling the <span className="text-amber-400 font-semibold font-sans">"Talk"</span> action button in the toolbar seamlessly transforms your note editor canvas into a WhatsApp/iMessage-like dialogue sanctuary. 
                 </p>
@@ -159,15 +159,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                 <div className="rounded-xl border border-white/[0.02] bg-white/[0.005] p-3 text-zinc-400 text-xs leading-relaxed">
-                  <strong className="text-zinc-200 block mb-0.5">Thoughtful Friend</strong>
+                  <strong className="text-zinc-200 block mb-0.5 font-bold font-serif">Thoughtful Friend</strong>
                   The AI guide acts as an emotionally intelligent companion rather than a cold assistant.
                 </div>
                 <div className="rounded-xl border border-white/[0.02] bg-white/[0.005] p-3 text-zinc-400 text-xs leading-relaxed">
-                  <strong className="text-zinc-200 block mb-0.5">Self-Reflection</strong>
+                  <strong className="text-zinc-200 block mb-0.5 font-bold font-serif">Self-Reflection</strong>
                   Type naturally to process emotions, organize random ideas, or conduct organic brainstorms.
                 </div>
                 <div className="rounded-xl border border-white/[0.02] bg-white/[0.005] p-3 text-zinc-400 text-xs leading-relaxed">
-                  <strong className="text-zinc-200 block mb-0.5">Session Archive</strong>
+                  <strong className="text-zinc-200 block mb-0.5 font-bold font-serif">Session Archive</strong>
                   Click "Save Chat as Note" to compile full conversations into beautifully formatted markdown logs.
                 </div>
               </div>
@@ -248,10 +248,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
         {/* SECTION 5 — FINAL CTA */}
         <section className="w-full flex flex-col items-center text-center space-y-6 pt-4 animate-chat-bubble select-none">
           <div className="h-0.5 w-24 bg-gradient-to-r from-teal-500/20 to-amber-500/20"></div>
-          <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">Ready to clear your mind?</h3>
+          <h3 className="text-xl md:text-2xl font-bold tracking-wide font-serif text-white tracking-tight">Ready to clear your mind?</h3>
           <button
             onClick={onStartWriting}
-            className="relative flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-8 py-3.5 text-sm font-semibold text-white shadow-xl shadow-teal-500/10 hover:shadow-teal-500/25 border border-teal-400/20 hover:border-teal-400/40 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
+            className="relative flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 px-8 py-3.5 text-sm font-semibold text-white shadow-xl shadow-teal-500/10 hover:shadow-teal-500/25 border border-teal-400/20 hover:border-teal-400/40 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group btn-premium-sweep"
           >
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 opacity-0 group-hover:opacity-100 blur-sm transition-opacity duration-300 pointer-events-none"></div>
             <span className="relative z-10">Begin Your First Reflection</span>
