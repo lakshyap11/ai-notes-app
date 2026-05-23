@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Editor from "@/components/Editor";
+import Onboarding from "@/components/Onboarding";
 import Toast from "@/components/Toast";
 
 interface Note {
@@ -13,6 +14,8 @@ interface Note {
   type?: "note" | "conversation";
   messages?: ChatMessage[];
   createdAt?: string;
+  talkModeEnabled?: boolean;
+  attachments?: any[];
 }
 
 interface ChatMessage {
@@ -84,6 +87,9 @@ export default function Home() {
   // Inline editor AI action loading state
   const [editorProcessingAction, setEditorProcessingAction] = useState<string | null>(null);
 
+  // Onboarding display state
+  const [isOnboarding, setIsOnboarding] = useState<boolean>(false);
+
   // Toast Notification State
   const [toast, setToast] = useState<ToastState>({
     show: false,
@@ -108,6 +114,7 @@ export default function Home() {
     setHasMounted(true);
     const savedNotes = localStorage.getItem("aethernote_notes");
     const savedActiveId = localStorage.getItem("aethernote_active_id");
+    const hasOnboarded = localStorage.getItem("aethernote_onboarded");
     
     let loadedNotes = INITIAL_NOTES;
     if (savedNotes) {
@@ -120,7 +127,30 @@ export default function Home() {
       localStorage.setItem("aethernote_notes", JSON.stringify(INITIAL_NOTES));
     }
     
+    // Automatically migrate old Talk Mode journal notes that have chat messages into proper permanent conversation note types
+    let migrated = false;
+    const migratedNotes = loadedNotes.map((note) => {
+      if (note.messages && note.messages.length > 0 && note.type !== "conversation") {
+        migrated = true;
+        return {
+          ...note,
+          type: "conversation" as const,
+          talkModeEnabled: note.talkModeEnabled !== false
+        };
+      }
+      return note;
+    });
+
+    if (migrated) {
+      loadedNotes = migratedNotes;
+      localStorage.setItem("aethernote_notes", JSON.stringify(migratedNotes));
+    }
+
     setNotes(loadedNotes);
+
+    if (!hasOnboarded) {
+      setIsOnboarding(true);
+    }
 
     if (loadedNotes.length > 0) {
       const defaultActiveId = loadedNotes.some((n) => n.id === savedActiveId)
@@ -147,6 +177,7 @@ export default function Home() {
   // Trigger side-effects or close sidebar on selection for mobile devices
   const handleSelectNote = (id: string) => {
     setActiveNoteId(id);
+    setIsOnboarding(false);
     setIsSidebarOpen(false);
   };
 
@@ -178,6 +209,35 @@ export default function Home() {
     
     setNotes((prevNotes) => [newNote, ...prevNotes]);
     setActiveNoteId(newId);
+    setIsOnboarding(false);
+    setSearchQuery("");
+    setIsSidebarOpen(false);
+  };
+
+  const handleCreateConversation = () => {
+    const newId = Date.now().toString();
+    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newNote: Note = {
+      id: newId,
+      title: "New Reflection Chat",
+      content: "",
+      updatedAt: "Just now",
+      type: "conversation",
+      talkModeEnabled: true,
+      messages: [
+        {
+          id: "welcome",
+          sender: "assistant",
+          text: `Hey! I'm here to listen and help you process your thoughts. What's on your mind right now?`,
+          timestamp: timeString
+        }
+      ],
+      createdAt: `${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}, ${timeString}`
+    };
+    
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
+    setActiveNoteId(newId);
+    setIsOnboarding(false);
     setSearchQuery("");
     setIsSidebarOpen(false);
   };
@@ -270,36 +330,48 @@ export default function Home() {
   const handleToggleTalkMode = () => {
     if (!activeNote) return;
 
-    const isCurrentlyConversation = activeNote.type === "conversation";
-    const nextType = isCurrentlyConversation ? "note" : "conversation";
-    
-    // Initialize custom, context-aware welcome greeting if entering Talk mode for the first time
-    let updatedMessages = activeNote.messages || [];
-    if (nextType === "conversation" && updatedMessages.length === 0) {
-      const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      updatedMessages = [
-        {
-          id: "welcome",
-          sender: "assistant",
-          text: `Hey! I'm here to listen and help you process your thoughts on "${activeNote.title || "this topic"}". What's on your mind right now?`,
-          timestamp: timeString
-        }
-      ];
+    if (activeNote.type !== "conversation") {
+      // Convert standard note to a conversation note!
+      let updatedMessages = activeNote.messages || [];
+      if (updatedMessages.length === 0) {
+        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        updatedMessages = [
+          {
+            id: "welcome",
+            sender: "assistant",
+            text: `Hey! I'm here to listen and help you process your thoughts on "${activeNote.title || "this topic"}". What's on your mind right now?`,
+            timestamp: timeString
+          }
+        ];
+      }
+      
+      handleUpdateNote({
+        type: "conversation",
+        talkModeEnabled: true,
+        messages: updatedMessages,
+        createdAt: activeNote.createdAt || `${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      });
+      
+      triggerToast(
+        "Conversational Mode Enabled",
+        "This note is now a permanent conversation reflection space.",
+        "info"
+      );
+    } else {
+      // Toggle Talk Mode (AI response generation) for this conversation note!
+      const nextTalkMode = activeNote.talkModeEnabled === false ? true : false;
+      handleUpdateNote({
+        talkModeEnabled: nextTalkMode
+      });
+      
+      triggerToast(
+        nextTalkMode ? "Talk Mode Enabled" : "Talk Mode Suspended",
+        nextTalkMode 
+          ? "The AI friend is active and will respond to your reflections."
+          : "Silent capture mode active. The AI will not reply.",
+        "info"
+      );
     }
-
-    handleUpdateNote({
-      type: nextType,
-      messages: updatedMessages,
-      createdAt: activeNote.createdAt || `${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    });
-
-    triggerToast(
-      nextType === "conversation" ? "Conversational Mode Enabled" : "Editor Mode Restored",
-      nextType === "conversation" 
-        ? "The note has transformed into a reflective conversation canvas." 
-        : "Standard document writing editor has been restored.",
-      "info"
-    );
   };
 
   // Send a message directly inside the note canvas conversational timeline
@@ -319,6 +391,12 @@ export default function Home() {
     const updatedMessagesWithUser = [...currentMessages, userMsg];
     
     handleUpdateNote({ messages: updatedMessagesWithUser });
+
+    // If Talk Mode is disabled, do NOT generate AI conversational replies
+    if (activeNote.talkModeEnabled === false) {
+      return;
+    }
+
     setIsConversationTyping(true);
 
     try {
@@ -365,11 +443,17 @@ export default function Home() {
         const lower = messageText.toLowerCase();
 
         if (lower.includes("hello") || lower.includes("hi")) {
-          aiText = `Hey! I'm so glad we're chatting. I'd love to hear what's going on with "${activeNote.title}". What's currently on your mind?`;
-        } else if (lower.includes("summarize") || lower.includes("summary")) {
-          aiText = `Looking back at what we've talked about for "${activeNote.title}", here are the main things that stood out:\n\n- We're focusing on what drives you.\n- We're organizing the core thoughts.\n- We're looking for clear steps forward.\n\nHow does that feel to you?`;
+          aiText = `Hey. Just sitting here thinking. What's on your mind tonight?`;
+        } else if (lower.includes("summarize") || lower.includes("summary") || lower.includes("archive")) {
+          aiText = `Looking back at our chat about "${activeNote.title}", it feels like you're mostly trying to process the big picture and find some clear space to breathe. Let me know if that sounds about right.`;
         } else {
-          aiText = `I completely understand what you mean. That makes a lot of sense. Tell me a bit more about what's behind that thought?`;
+          if (lower.includes("sad") || lower.includes("bad") || lower.includes("tired") || lower.includes("hard") || lower.includes("stuck")) {
+            aiText = `Yeah… that sounds really draining, honestly. You've probably been holding onto that stress for too long. Want to write it out?`;
+          } else if (lower.includes("happy") || lower.includes("excited") || lower.includes("good") || lower.includes("cool")) {
+            aiText = `Honestly, that's awesome to hear. Sounds like things are finally clicking. What do you think made the difference?`;
+          } else {
+            aiText = `Yeah... that makes sense honestly. That kind of thing can stay in your head for hours. What do you think is driving that thought?`;
+          }
         }
 
         const aiMsg = {
@@ -496,24 +580,32 @@ export default function Home() {
 
   if (!hasMounted) {
     return (
-      <div className="relative flex h-screen w-full bg-[#050507] text-[#f4f4f5] font-sans items-center justify-center overflow-hidden">
-        {/* Dynamic Ambient Neon Backgrounds */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full radial-glow-violet opacity-80 animate-pulse-slow"></div>
-          <div className="absolute -bottom-40 right-10 h-[500px] w-[500px] rounded-full radial-glow-cyan opacity-40"></div>
+      <div className="relative flex h-screen w-full bg-[#05090c] text-[#f4f7f6] font-sans items-center justify-center overflow-hidden">
+        {/* Cinematic Immersive Sanctuary Background System */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#05090c]">
+          {/* Animated film-grain texture overlay */}
+          <div className="noise-overlay" />
+          
+          {/* Cinematic Vignette Shadow */}
+          <div className="cinematic-vignette" />
+          
+          {/* Dynamic Light Diffusion Layers */}
+          <div className="absolute -top-[10%] -left-[10%] h-[750px] w-[750px] rounded-full radial-glow-deep-teal opacity-75 blur-[120px] animate-float-teal" />
+          <div className="absolute -bottom-[15%] -right-[5%] h-[700px] w-[700px] rounded-full radial-glow-warm-amber opacity-45 blur-[140px] animate-float-amber" />
+          <div className="absolute top-[15%] left-[20%] right-[20%] bottom-[15%] rounded-[100px] bg-gradient-to-tr from-teal-500/5 to-amber-500/3 blur-[160px] animate-breathing-bloom" />
           
           {/* Sleek Dotted Grid Mask */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.008)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)] opacity-70"></div>
         </div>
         
         {/* Sleek loading indicator */}
         <div className="relative z-10 flex flex-col items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-500 shadow-lg shadow-violet-500/25 border border-violet-400/30 text-white animate-pulse">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-500 shadow-lg shadow-teal-500/25 border border-teal-400/30 text-white animate-pulse">
             <span className="text-xl font-bold tracking-wider">A</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono tracking-widest uppercase">
             <span>Booting Engine</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-ping"></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-ping"></span>
           </div>
         </div>
       </div>
@@ -521,14 +613,30 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex h-screen w-full bg-[#050507] text-[#f4f4f5] font-sans overflow-hidden">
-      {/* Dynamic Ambient Neon Backgrounds */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full radial-glow-violet opacity-80 animate-pulse-slow"></div>
-        <div className="absolute -bottom-40 right-10 h-[500px] w-[500px] rounded-full radial-glow-cyan opacity-40"></div>
+    <div className="relative flex h-screen w-full bg-[#05090c] text-[#f4f7f6] font-sans overflow-hidden">
+      {/* Cinematic Immersive Sanctuary Background System */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#05090c]">
+        {/* Animated film-grain texture overlay */}
+        <div className="noise-overlay" />
+        
+        {/* Cinematic Vignette Shadow */}
+        <div className="cinematic-vignette" />
+        
+        {/* Dynamic Light Diffusion Layers */}
+        {/* 1. Deep cool teal floating glow from upper-left */}
+        <div className="absolute -top-[10%] -left-[10%] h-[750px] w-[750px] rounded-full radial-glow-deep-teal opacity-75 blur-[120px] animate-float-teal" />
+        
+        {/* 2. Warm amber/orange ambient float from lower-right */}
+        <div className="absolute -bottom-[15%] -right-[5%] h-[700px] w-[700px] rounded-full radial-glow-warm-amber opacity-45 blur-[140px] animate-float-amber" />
+        
+        {/* 3. Soft cyan glow bloom right behind the center editor area */}
+        <div className="absolute top-[15%] left-[20%] right-[20%] bottom-[15%] rounded-[100px] bg-gradient-to-tr from-teal-500/5 to-amber-500/3 blur-[160px] animate-breathing-bloom" />
+        
+        {/* 4. Muted low-opacity cyan overhead diffusion */}
+        <div className="absolute top-0 left-1/4 right-1/4 h-[250px] rounded-full bg-teal-400/[0.03] blur-[80px]" />
         
         {/* Sleek Dotted Grid Mask */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_100%)]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.008)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.008)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)] opacity-70"></div>
       </div>
 
       <div className="relative z-10 flex h-full w-full overflow-hidden">
@@ -540,23 +648,36 @@ export default function Home() {
           setSearchQuery={setSearchQuery}
           onSelectNote={handleSelectNote}
           onCreateNote={handleCreateNote}
+          onCreateConversation={handleCreateConversation}
           onDeleteNote={handleDeleteNote}
           isOpen={isSidebarOpen}
           setIsOpen={setIsSidebarOpen}
+          isOnboarding={isOnboarding}
+          onToggleOnboarding={setIsOnboarding}
         />
 
-        {/* Main Note Editor Canvas */}
-        <Editor
-          activeNote={activeNote}
-          onUpdateNote={handleUpdateNote}
-          onAIAction={handleEditorAIAction}
-          isProcessing={editorProcessingAction}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          onToggleTalkMode={handleToggleTalkMode}
-          onSendMessage={handleSendMessageToNote}
-          isAITyping={isConversationTyping}
-          onSaveChatAsNote={handleSaveChatAsNote}
-        />
+        {/* Main Note Editor Canvas OR Onboarding/Welcome page */}
+        {isOnboarding ? (
+          <Onboarding
+            onStartWriting={() => {
+              setIsOnboarding(false);
+              localStorage.setItem("aethernote_onboarded", "true");
+            }}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          />
+        ) : (
+          <Editor
+            activeNote={activeNote}
+            onUpdateNote={handleUpdateNote}
+            onAIAction={handleEditorAIAction}
+            isProcessing={editorProcessingAction}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            onToggleTalkMode={handleToggleTalkMode}
+            onSendMessage={handleSendMessageToNote}
+            isAITyping={isConversationTyping}
+            onSaveChatAsNote={handleSaveChatAsNote}
+          />
+        )}
       </div>
 
       {/* Toast Alert Notifications */}

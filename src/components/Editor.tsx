@@ -1,5 +1,6 @@
-import React from "react";
-import { MenuIcon, SparklesIcon, AlignLeftIcon, ZapIcon, EyeIcon, MessageSquareIcon, SendIcon } from "./Icons";
+import React, { useState, useRef, useEffect } from "react";
+import { MenuIcon, SparklesIcon, AlignLeftIcon, ZapIcon, EyeIcon, MessageSquareIcon, SendIcon, PaperclipIcon } from "./Icons";
+import { AttachmentCard, AttachmentStripCard, FullscreenImageModal } from "./AttachmentSystem";
 
 interface Note {
   id: string;
@@ -9,6 +10,8 @@ interface Note {
   type?: "note" | "conversation";
   messages?: any[];
   createdAt?: string;
+  talkModeEnabled?: boolean;
+  attachments?: any[];
 }
 
 interface EditorProps {
@@ -85,9 +88,126 @@ const Editor: React.FC<EditorProps> = ({
   isAITyping,
   onSaveChatAsNote,
 }) => {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  React.useEffect(() => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+  const [expandedImage, setExpandedImage] = useState<{ url: string; name: string } | null>(null);
+
+  // Load attachments asynchronously from IndexedDB
+  useEffect(() => {
+    if (!activeNote || !activeNote.attachments || activeNote.attachments.length === 0) {
+      return;
+    }
+
+    const loadAttachments = async () => {
+      try {
+        const { getAttachmentData } = await import("@/utils/attachmentDb");
+        const newUrls: Record<string, string> = { ...attachmentUrls };
+        let updated = false;
+
+        const attachments = activeNote.attachments || [];
+        for (const att of attachments) {
+          if (!newUrls[att.id]) {
+            const cachedData = await getAttachmentData(att.id);
+            if (cachedData) {
+              newUrls[att.id] = cachedData;
+              updated = true;
+            }
+          }
+        }
+
+        if (updated) {
+          setAttachmentUrls(newUrls);
+        }
+      } catch (e) {
+        console.warn("Failed to load attachments from IndexedDB", e);
+      }
+    };
+
+    loadAttachments();
+  }, [activeNote?.id, activeNote?.attachments]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !activeNote) return;
+    const file = files[0];
+
+    // Format size
+    const sizeKb = file.size / 1024;
+    const sizeStr = sizeKb > 1024 
+      ? `${(sizeKb / 1024).toFixed(1)} MB` 
+      : `${sizeKb.toFixed(0)} KB`;
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Url = reader.result as string;
+      const attachmentId = `attach_${Date.now()}`;
+      
+      let fileType: "image" | "audio" | "pdf" | "document" | "generic" = "generic";
+      if (file.type.startsWith("image/")) fileType = "image";
+      else if (file.type.startsWith("audio/")) fileType = "audio";
+      else if (file.type === "application/pdf") fileType = "pdf";
+      else if (
+        file.type.startsWith("text/") || 
+        file.type.includes("word") || 
+        file.type.includes("excel") || 
+        file.type.includes("powerpoint")
+      ) {
+        fileType = "document";
+      }
+
+      const newAttachment = {
+        id: attachmentId,
+        type: fileType,
+        name: file.name,
+        size: sizeStr,
+        createdAt: new Date().toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+      };
+
+      // 1. Store in IndexedDB
+      try {
+        const { storeAttachment } = await import("@/utils/attachmentDb");
+        await storeAttachment(attachmentId, base64Url);
+      } catch (err) {
+        console.error("IndexedDB store failed", err);
+      }
+
+      // 2. Cache in component state
+      setAttachmentUrls((prev) => ({ ...prev, [attachmentId]: base64Url }));
+
+      // 3. Update note attachments metadata
+      const updatedAttachments = [...(activeNote.attachments || []), newAttachment];
+      onUpdateNote({ attachments: updatedAttachments });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!activeNote || !activeNote.attachments) return;
+
+    try {
+      const { deleteAttachmentData } = await import("@/utils/attachmentDb");
+      await deleteAttachmentData(attachmentId);
+    } catch (err) {
+      console.error("IndexedDB delete failed", err);
+    }
+
+    setAttachmentUrls((prev) => {
+      const copy = { ...prev };
+      delete copy[attachmentId];
+      return copy;
+    });
+
+    const updatedAttachments = activeNote.attachments.filter((att: any) => att.id !== attachmentId);
+    onUpdateNote({ attachments: updatedAttachments });
+  };
+
+  useEffect(() => {
     if (activeNote?.type === "conversation") {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
@@ -101,7 +221,12 @@ const Editor: React.FC<EditorProps> = ({
 
   if (!activeNote) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-8 bg-[#07070a]/40 text-center">
+      <main className="flex-1 flex flex-col items-center justify-center p-8 bg-[#080d12]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] text-center overflow-hidden relative">
+        {/* Subtle Animated Aurora-Style Background Glow */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] h-[350px] w-[500px] rounded-full bg-teal-500/8 blur-[100px] animate-aurora-teal" />
+          <div className="absolute -bottom-[20%] right-[10%] h-[400px] w-[450px] rounded-full bg-amber-500/5 blur-[110px] animate-aurora-amber" />
+        </div>
         {/* Mobile Header Toggle */}
         <div className="absolute top-0 left-0 w-full h-16 flex items-center px-6 lg:hidden border-b border-white/[0.04] bg-[#09090b]/50 backdrop-blur-md">
           <button
@@ -126,9 +251,17 @@ const Editor: React.FC<EditorProps> = ({
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-[#07070a]/40 overflow-hidden relative">
+    <main className="flex-1 flex flex-col h-full bg-[#080d12]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] overflow-hidden relative">
+      {/* Subtle Animated Aurora-Style Background Glow */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] h-[350px] w-[500px] rounded-full bg-teal-500/10 blur-[100px] animate-aurora-teal" />
+        <div className="absolute -bottom-[20%] right-[10%] h-[400px] w-[450px] rounded-full bg-amber-500/6 blur-[110px] animate-aurora-amber" />
+        <div className="absolute top-[30%] -right-[10%] h-[350px] w-[400px] rounded-full bg-emerald-500/6 blur-[90px] animate-aurora-emerald" />
+        <div className="absolute bottom-[20%] -left-[10%] h-[300px] w-[450px] rounded-full bg-indigo-500/4 blur-[100px] animate-aurora-indigo" />
+      </div>
+
       {/* Editor Header Bar */}
-      <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.04] bg-[#09090b]/40 backdrop-blur-md z-20">
+      <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.03] bg-white/[0.01] relative z-20">
         <div className="flex items-center gap-3">
           {/* Mobile hamburger menu */}
           <button
@@ -155,110 +288,175 @@ const Editor: React.FC<EditorProps> = ({
       </header>
 
       {/* AI actions Power Strip */}
-      <section className="px-6 py-3 border-b border-white/[0.04] bg-white/[0.01] backdrop-blur-sm z-10 flex flex-col md:flex-row md:items-center gap-3 overflow-x-auto">
+      <section className="px-6 py-3 border-b border-white/[0.03] bg-white/[0.005] z-10 flex flex-col md:flex-row md:items-center gap-3 overflow-x-auto">
         <div className="flex items-center gap-1.5 shrink-0">
-          <SparklesIcon size={14} className="text-violet-400" />
+          <SparklesIcon size={14} className="text-teal-400 animate-pulse" />
           <span className="text-[10px] font-bold tracking-wider text-zinc-400 font-mono uppercase">
             AI Assistant Actions:
           </span>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 md:pb-0">
-          <button
-            onClick={() => onAIAction("refine")}
-            disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
-              isProcessing === "refine"
-                ? "bg-violet-600/25 border border-violet-500/40 text-violet-300 shimmer-effect relative overflow-hidden"
-                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-violet-500/10 hover:border-violet-500/20 hover:text-violet-300 cursor-pointer disabled:opacity-50"
-            }`}
-          >
-            <SparklesIcon size={11} className={isProcessing === "refine" ? "animate-spin" : ""} />
-            <span>{isProcessing === "refine" ? "Refining Text..." : "Refine Draft"}</span>
-          </button>
+          {activeNote.type !== "conversation" && (
+            <>
+              <button
+                onClick={() => onAIAction("refine")}
+                disabled={!!isProcessing}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                  isProcessing === "refine"
+                    ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                <SparklesIcon size={11} className={isProcessing === "refine" ? "animate-spin" : ""} />
+                <span>{isProcessing === "refine" ? "Refining..." : "Refine Draft"}</span>
+              </button>
 
-          <button
-            onClick={() => onAIAction("summarize")}
-            disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
-              isProcessing === "summarize"
-                ? "bg-violet-600/25 border border-violet-500/40 text-violet-300 shimmer-effect relative overflow-hidden"
-                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-violet-500/10 hover:border-violet-500/20 hover:text-violet-300 cursor-pointer disabled:opacity-50"
-            }`}
-          >
-            <AlignLeftIcon size={11} className={isProcessing === "summarize" ? "animate-pulse" : ""} />
-            <span>{isProcessing === "summarize" ? "Summarizing..." : "Summarize"}</span>
-          </button>
+              <button
+                onClick={() => onAIAction("summarize")}
+                disabled={!!isProcessing}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                  isProcessing === "summarize"
+                    ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                <AlignLeftIcon size={11} className={isProcessing === "summarize" ? "animate-pulse" : ""} />
+                <span>{isProcessing === "summarize" ? "Summarizing..." : "Summarize"}</span>
+              </button>
 
-          <button
-            onClick={() => onAIAction("professional")}
-            disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
-              isProcessing === "professional"
-                ? "bg-violet-600/25 border border-violet-500/40 text-violet-300 shimmer-effect relative overflow-hidden"
-                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-violet-500/10 hover:border-violet-500/20 hover:text-violet-300 cursor-pointer disabled:opacity-50"
-            }`}
-          >
-            <EyeIcon size={11} className={isProcessing === "professional" ? "animate-bounce" : ""} />
-            <span>{isProcessing === "professional" ? "Make Professional" : "Formal Polish"}</span>
-          </button>
+              <button
+                onClick={() => onAIAction("professional")}
+                disabled={!!isProcessing}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                  isProcessing === "professional"
+                    ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                <EyeIcon size={11} className={isProcessing === "professional" ? "animate-bounce" : ""} />
+                <span>{isProcessing === "professional" ? "Polishing..." : "Formal Polish"}</span>
+              </button>
 
-          <button
-            onClick={() => onAIAction("autocomplete")}
-            disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
-              isProcessing === "autocomplete"
-                ? "bg-violet-600/25 border border-violet-500/40 text-violet-300 shimmer-effect relative overflow-hidden"
-                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-violet-500/10 hover:border-violet-500/20 hover:text-violet-300 cursor-pointer disabled:opacity-50"
-            }`}
-          >
-            <ZapIcon size={11} className={isProcessing === "autocomplete" ? "animate-ping" : ""} />
-            <span>{isProcessing === "autocomplete" ? "Completing..." : "Autocomplete"}</span>
-          </button>
+              <button
+                onClick={() => onAIAction("autocomplete")}
+                disabled={!!isProcessing}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 ${
+                  isProcessing === "autocomplete"
+                    ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                <ZapIcon size={11} className={isProcessing === "autocomplete" ? "animate-ping" : ""} />
+                <span>{isProcessing === "autocomplete" ? "Completing..." : "Autocomplete"}</span>
+              </button>
+            </>
+          )}
 
           <button
             onClick={onToggleTalkMode}
             disabled={!!isProcessing}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all duration-300 cursor-pointer disabled:opacity-50 ${
-              activeNote.type === "conversation"
-                ? "bg-violet-600/25 border border-violet-500/40 text-violet-300"
-                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-violet-500/10 hover:border-violet-500/20 hover:text-violet-300"
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-300 cursor-pointer disabled:opacity-50 ${
+              activeNote.type === "conversation" && activeNote.talkModeEnabled !== false
+                ? "bg-amber-950/35 border border-amber-500/45 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.12)]"
+                : activeNote.type === "conversation" && activeNote.talkModeEnabled === false
+                ? "bg-stone-900/30 border border-stone-700/40 text-zinc-400 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-300"
+                : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-300"
             }`}
-            title="Toggle reflective conversation mode inside note editor"
+            title={activeNote.type === "conversation" ? "Toggle conversational AI replies" : "Convert note to reflection conversation"}
           >
-            <MessageSquareIcon size={11} className={activeNote.type === "conversation" ? "text-violet-400 animate-pulse" : ""} />
-            <span>{activeNote.type === "conversation" ? "Talk Mode On" : "Talk"}</span>
+            <MessageSquareIcon size={11} className={activeNote.type === "conversation" && activeNote.talkModeEnabled !== false ? "text-amber-400 animate-pulse" : ""} />
+            <span>
+              {activeNote.type === "conversation"
+                ? activeNote.talkModeEnabled !== false
+                  ? "Talk Mode On"
+                  : "Talk Mode Off"
+                : "Talk"}
+            </span>
+          </button>
+
+          {/* Hidden File Picker Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,audio/*,application/pdf,text/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          />
+
+          {/* Attachments Trigger Button */}
+          <button
+            onClick={triggerFileUpload}
+            disabled={!!isProcessing}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all duration-300 cursor-pointer disabled:opacity-50 bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-355 active:scale-95 shadow-md"
+            title="Attach voice note, image, PDF or document"
+          >
+            <PaperclipIcon size={11} className="text-teal-400" />
+            <span>Attach</span>
           </button>
         </div>
       </section>
 
       {/* Editor Main Content Area */}
-      <div className={`flex-1 flex flex-col z-0 max-w-4xl w-full mx-auto overflow-hidden ${
+      <div className={`flex-1 flex flex-col relative z-10 max-w-4xl w-full mx-auto overflow-hidden ${
         activeNote.type === "conversation" 
-          ? "px-6 pb-4 pt-2" 
+          ? "px-6 pb-4 pt-4" 
           : "p-6 md:p-8 lg:p-12 overflow-y-auto space-y-6"
       }`}>
         {activeNote.type === "conversation" ? (
           /* CONVERSATIONAL ARCHIVE VIEW */
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            {/* Conversational Editable Title */}
+            <input
+              type="text"
+              value={activeNote.title}
+              onChange={(e) => onUpdateNote({ title: e.target.value })}
+              placeholder="Untitled Conversation"
+              className="w-full bg-transparent text-xl md:text-2xl font-bold tracking-tight text-white placeholder-zinc-600 outline-none border-b border-transparent focus:border-white/[0.02] pb-2 transition-all duration-200 shrink-0 select-text"
+            />
+
             {/* Elegant Minimalist Header Bar */}
-            <div className="flex items-center justify-between py-3 border-b border-white/[0.04] shrink-0 mb-2">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <div className="flex items-center justify-between py-2.5 border-b border-white/[0.04] shrink-0 mb-1">
+              <div className="flex items-center gap-2 select-none">
+                {activeNote.talkModeEnabled !== false ? (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-zinc-600"></span>
+                )}
+                <span className="text-[11px] font-semibold tracking-wide text-zinc-400 font-sans">
+                  {activeNote.talkModeEnabled !== false ? "journaling with friend (AI active)" : "silent reflection journal (AI paused)"}
                 </span>
-                <span className="text-xs font-semibold tracking-wide text-zinc-400 font-sans">journaling with friend</span>
               </div>
               
               <button
                 onClick={onSaveChatAsNote}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-500/20 bg-violet-600/5 text-[10.5px] font-semibold text-violet-300 hover:bg-violet-600/15 hover:border-violet-500/40 cursor-pointer active:scale-95 transition-all select-none"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/20 bg-amber-500/5 text-[10.5px] font-semibold text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/40 cursor-pointer active:scale-95 transition-all select-none shadow-[0_0_8px_rgba(245,158,11,0.05)]"
                 title="Save this conversation as a note"
               >
                 <span>Save Chat as Note</span>
               </button>
             </div>
+
+            {/* Conversation Attached Memories Strip */}
+            {activeNote.attachments && activeNote.attachments.length > 0 && (
+              <div className="flex flex-col gap-1.5 py-2 border-b border-white/[0.03] shrink-0 select-none">
+                <span className="text-[9px] font-bold tracking-wider text-zinc-500 font-mono uppercase px-1">Attached Memories:</span>
+                <div className="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-none scroll-smooth">
+                  {activeNote.attachments.map((att: any) => (
+                    <AttachmentStripCard
+                      key={att.id}
+                      attachment={att}
+                      dataUrl={attachmentUrls[att.id]}
+                      onDelete={() => handleDeleteAttachment(att.id)}
+                      onExpandImage={(url, name) => setExpandedImage({ url, name })}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Conversation Messages Timeline */}
             <div className="flex-1 overflow-y-auto py-4 space-y-6 pr-1 scrollbar-none">
@@ -279,8 +477,8 @@ const Editor: React.FC<EditorProps> = ({
                       <div
                         className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 text-xs md:text-sm leading-relaxed border transition-all duration-300 ${
                           isUser
-                            ? "bg-violet-600/15 border-violet-500/25 text-white rounded-tr-none shadow-lg shadow-violet-950/20 glass-panel-light"
-                            : "bg-white/[0.02] border-white/[0.04] text-zinc-300 rounded-tl-none glass-panel-light"
+                            ? "bg-stone-900/45 border-stone-700/30 text-zinc-100 rounded-tr-none shadow-lg shadow-black/10 glass-panel-light"
+                            : "bg-teal-950/15 border-teal-500/20 text-zinc-200 rounded-tl-none shadow-lg shadow-teal-950/10 glass-panel-light"
                         }`}
                       >
                         {renderBubbleText(msg.text)}
@@ -307,10 +505,10 @@ const Editor: React.FC<EditorProps> = ({
                   <span className="text-[10px] font-sans font-medium text-zinc-500 mb-1.5 px-2 tracking-wider uppercase opacity-60 select-none">
                     Friend
                   </span>
-                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-white/[0.02] border border-white/[0.04] text-zinc-300 flex items-center gap-1.5 glass-panel-light">
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400/80 animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400/80 animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400/80 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-teal-950/15 border border-teal-500/20 text-zinc-300 flex items-center gap-1.5 glass-panel-light shadow-lg shadow-teal-950/10">
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </div>
                 </div>
               )}
@@ -331,23 +529,34 @@ const Editor: React.FC<EditorProps> = ({
               }}
               className="py-3 border-t border-white/[0.04] shrink-0"
             >
-              <div className="relative flex items-center w-full max-w-2xl mx-auto">
-                <input
-                  name="chatInput"
-                  type="text"
-                  placeholder="Reflect with a thoughtful friend..."
-                  disabled={isAITyping}
-                  autoComplete="off"
-                  className="w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] py-3.5 pl-5 pr-14 text-xs md:text-sm text-white placeholder-zinc-500 outline-none transition-all duration-200 focus:border-violet-500/50 focus:bg-white/[0.04] focus:ring-1 focus:ring-violet-500/30 disabled:opacity-50 font-sans"
-                />
+              <div className="relative flex items-center w-full max-w-2xl mx-auto gap-2">
+                {/* Paperclip Button for Conversations */}
                 <button
-                  type="submit"
-                  disabled={isAITyping}
-                  className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-md shadow-violet-500/10"
-                  title="Send Message"
+                  type="button"
+                  onClick={triggerFileUpload}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] text-zinc-400 hover:text-white cursor-pointer active:scale-95 transition-all shadow-md group"
+                  title="Attach voice note, image, PDF or document"
                 >
-                  <SendIcon size={14} />
+                  <PaperclipIcon size={16} className="text-zinc-400 group-hover:text-teal-400 transition-colors" />
                 </button>
+                <div className="relative flex-1 flex items-center">
+                  <input
+                    name="chatInput"
+                    type="text"
+                    placeholder="Reflect with a thoughtful friend..."
+                    disabled={isAITyping}
+                    autoComplete="off"
+                    className="w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] py-3.5 pl-5 pr-14 text-xs md:text-sm text-white placeholder-zinc-500 outline-none transition-all duration-200 focus:border-teal-500/50 focus:bg-white/[0.04] focus:ring-1 focus:ring-teal-500/30 disabled:opacity-50 font-sans"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isAITyping}
+                    className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-teal-600 to-emerald-500 text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-md shadow-teal-500/20"
+                    title="Send Message"
+                  >
+                    <SendIcon size={14} />
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -360,8 +569,26 @@ const Editor: React.FC<EditorProps> = ({
               value={activeNote.title}
               onChange={(e) => onUpdateNote({ title: e.target.value })}
               placeholder="Untitled Note"
-              className="w-full bg-transparent text-2xl md:text-3xl font-bold tracking-tight text-white placeholder-zinc-700 outline-none border-b border-transparent focus:border-white/[0.03] pb-4 transition-all duration-200"
+              className="w-full bg-transparent text-2xl md:text-3xl font-bold tracking-tight text-white placeholder-zinc-700 outline-none border-b border-transparent focus:border-white/[0.03] pb-4 transition-all duration-200 shrink-0 select-text"
             />
+
+            {/* Standard Note Memory Blocks Grid */}
+            {activeNote.attachments && activeNote.attachments.length > 0 && (
+              <div className="space-y-3 pb-4 select-none shrink-0 border-b border-white/[0.02] animate-chat-bubble">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 font-mono uppercase">Memory Blocks:</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {activeNote.attachments.map((att: any) => (
+                    <AttachmentCard
+                      key={att.id}
+                      attachment={att}
+                      dataUrl={attachmentUrls[att.id]}
+                      onDelete={() => handleDeleteAttachment(att.id)}
+                      onExpandImage={(url, name) => setExpandedImage({ url, name })}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Editor Body Text */}
             <textarea
@@ -384,6 +611,15 @@ const Editor: React.FC<EditorProps> = ({
           <span>Modified: {activeNote.updatedAt}</span>
         </div>
       </footer>
+
+      {/* Fullscreen Lightroom Modal overlay */}
+      {expandedImage && (
+        <FullscreenImageModal
+          url={expandedImage.url}
+          name={expandedImage.name}
+          onClose={() => setExpandedImage(null)}
+        />
+      )}
     </main>
   );
 };
