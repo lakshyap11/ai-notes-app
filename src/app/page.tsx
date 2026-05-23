@@ -3,15 +3,16 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Editor from "@/components/Editor";
-import AIAssistant from "@/components/AIAssistant";
 import Toast from "@/components/Toast";
-import { SparklesIcon } from "@/components/Icons";
 
 interface Note {
   id: string;
   title: string;
   content: string;
   updatedAt: string;
+  type?: "note" | "conversation";
+  messages?: ChatMessage[];
+  createdAt?: string;
 }
 
 interface ChatMessage {
@@ -60,14 +61,6 @@ Let's refine this outline using the AI action bar!`,
   },
 ];
 
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: "m1",
-    sender: "assistant",
-    text: "Hello! I am your AI writing companion. I can help you summarize notes, brainstorm ideas, draft checklists, or outline schedules. What are we creating today?",
-    timestamp: "7:45 PM",
-  },
-];
 
 interface ToastState {
   show: boolean;
@@ -85,10 +78,8 @@ export default function Home() {
   // Sidebar open state (specifically for responsive mobile drawer)
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   
-  // AI assistant drawer state
-  const [isAIPanelOpen, setIsAIPanelOpen] = useState<boolean>(false);
-  const [aiMessages, setAiMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
-  const [isAITyping, setIsAITyping] = useState<boolean>(false);
+  // Local active conversation typing loader state
+  const [isConversationTyping, setIsConversationTyping] = useState<boolean>(false);
   
   // Inline editor AI action loading state
   const [editorProcessingAction, setEditorProcessingAction] = useState<string | null>(null);
@@ -209,6 +200,191 @@ export default function Home() {
     });
   };
 
+  const handleSaveChatAsNote = () => {
+    if (!activeNote || !activeNote.messages) return;
+    
+    // Check if there are user messages to save
+    const userMessages = activeNote.messages.filter((msg) => msg.sender === "user");
+    if (userMessages.length === 0) {
+      triggerToast(
+        "No Conversational History",
+        "Type some thoughts in the reflection input first before saving.",
+        "warning"
+      );
+      return;
+    }
+
+    const date = new Date();
+    const dateString = date.toLocaleDateString([], {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const timeString = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    // 1. Auto-generate conversational title based on the first user query
+    const firstUserMsg = userMessages[0];
+    let cleanText = firstUserMsg.text.replace(/^[^\w]*/, "").trim();
+    const words = cleanText.split(/\s+/);
+    const titleSnippet = words.slice(0, 5).join(" ");
+    const autoTitle = `📓 Journal: ${titleSnippet}${words.length > 5 ? "..." : ""}`;
+
+    // 2. Formulate beautiful structured markdown text
+    let markdownContent = `# 📓 Conversational Journal\n*Archived on ${dateString} at ${timeString}*\n\nThis note preserves the complete thread of your dialogue session with the AI Assistant.\n\n---\n\n`;
+
+    activeNote.messages.forEach((msg) => {
+      // Skip welcome tags for cleaner static documents
+      if (msg.id === "welcome") return;
+
+      const speakerName = msg.sender === "user" ? "👤 User" : "🧠 AI Assistant";
+      markdownContent += `### **${speakerName}** *(${msg.timestamp})*\n\n${msg.text.trim()}\n\n---\n\n`;
+    });
+
+    markdownContent += `\n*AetherNote Auto-Archive Engine. All changes saved locally.*`;
+
+    // 3. Create a static separate copy of the conversation note and add to state
+    const newId = Date.now().toString();
+    const newNote: Note = {
+      id: newId,
+      title: autoTitle,
+      content: markdownContent,
+      updatedAt: `Today, ${timeString}`,
+      type: "conversation",
+      messages: JSON.parse(JSON.stringify(activeNote.messages)),
+      createdAt: `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${timeString}`,
+    };
+
+    setNotes((prevNotes) => [newNote, ...prevNotes]);
+    setActiveNoteId(newId);
+    setSearchQuery("");
+
+    triggerToast(
+      "Journal Note Saved",
+      "A static separate copy of this session has been saved in the sidebar.",
+      "info"
+    );
+  };
+
+  // Toggle reflective conversational mode directly inside the note editor!
+  const handleToggleTalkMode = () => {
+    if (!activeNote) return;
+
+    const isCurrentlyConversation = activeNote.type === "conversation";
+    const nextType = isCurrentlyConversation ? "note" : "conversation";
+    
+    // Initialize custom, context-aware welcome greeting if entering Talk mode for the first time
+    let updatedMessages = activeNote.messages || [];
+    if (nextType === "conversation" && updatedMessages.length === 0) {
+      const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      updatedMessages = [
+        {
+          id: "welcome",
+          sender: "assistant",
+          text: `Hey! I'm here to listen and help you process your thoughts on "${activeNote.title || "this topic"}". What's on your mind right now?`,
+          timestamp: timeString
+        }
+      ];
+    }
+
+    handleUpdateNote({
+      type: nextType,
+      messages: updatedMessages,
+      createdAt: activeNote.createdAt || `${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    });
+
+    triggerToast(
+      nextType === "conversation" ? "Conversational Mode Enabled" : "Editor Mode Restored",
+      nextType === "conversation" 
+        ? "The note has transformed into a reflective conversation canvas." 
+        : "Standard document writing editor has been restored.",
+      "info"
+    );
+  };
+
+  // Send a message directly inside the note canvas conversational timeline
+  const handleSendMessageToNote = async (messageText: string) => {
+    if (!activeNote || !messageText.trim() || isConversationTyping) return;
+
+    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = {
+      id: Date.now().toString(),
+      sender: "user" as const,
+      text: messageText,
+      timestamp: timeString,
+    };
+
+    // 1. Immediately append user message to local note state
+    const currentMessages = activeNote.messages || [];
+    const updatedMessagesWithUser = [...currentMessages, userMsg];
+    
+    handleUpdateNote({ messages: updatedMessagesWithUser });
+    setIsConversationTyping(true);
+
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "chat",
+          content: messageText,
+          noteContext: activeNote.content || "", // Pass standard text content as context!
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `API error (status: ${res.status})`);
+      }
+
+      const data = await res.json();
+      
+      const aiMsg = {
+        id: Date.now().toString(),
+        sender: "assistant" as const,
+        text: data.response,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      // 2. Append AI response to note state
+      handleUpdateNote({ messages: [...updatedMessagesWithUser, aiMsg] });
+      setIsConversationTyping(false);
+
+    } catch (err: any) {
+      console.warn("[AetherNote Inline Chat Hook]: Failed to connect to Gemini API. Falling back to local reflection.", err);
+      
+      triggerToast(
+        "Demo Mode Active",
+        "The server Gemini API Key is not configured. Falling back to simulated chat response.",
+        "warning"
+      );
+
+      // Simulated local fallback
+      setTimeout(() => {
+        let aiText = "";
+        const lower = messageText.toLowerCase();
+
+        if (lower.includes("hello") || lower.includes("hi")) {
+          aiText = `Hey! I'm so glad we're chatting. I'd love to hear what's going on with "${activeNote.title}". What's currently on your mind?`;
+        } else if (lower.includes("summarize") || lower.includes("summary")) {
+          aiText = `Looking back at what we've talked about for "${activeNote.title}", here are the main things that stood out:\n\n- We're focusing on what drives you.\n- We're organizing the core thoughts.\n- We're looking for clear steps forward.\n\nHow does that feel to you?`;
+        } else {
+          aiText = `I completely understand what you mean. That makes a lot of sense. Tell me a bit more about what's behind that thought?`;
+        }
+
+        const aiMsg = {
+          id: (Date.now() + 1).toString(),
+          sender: "assistant" as const,
+          text: aiText,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+
+        handleUpdateNote({ messages: [...updatedMessagesWithUser, aiMsg] });
+        setIsConversationTyping(false);
+      }, 1500);
+    }
+  };
+
   const streamTextToEditor = (startingText: string, targetText: string) => {
     let currentLength = startingText.length;
     const targetLength = targetText.length;
@@ -316,93 +492,7 @@ export default function Home() {
     }
   };
 
-  // Connected AI responses inside Chat Panel (with demo-mode fallback)
-  const handleSendMessage = async (messageText: string) => {
-    if (!messageText.trim() || isAITyping) return;
 
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      sender: "user",
-      text: messageText,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setAiMessages((prev) => [...prev, userMsg]);
-    setIsAITyping(true);
-
-    try {
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          content: messageText,
-          noteContext: activeNote?.content || "",
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `API error (status: ${res.status})`);
-      }
-
-      const data = await res.json();
-      
-      const aiMsg: ChatMessage = {
-        id: Date.now().toString(),
-        sender: "assistant",
-        text: data.response,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-
-      setAiMessages((prev) => [...prev, aiMsg]);
-      setIsAITyping(false);
-
-    } catch (err: any) {
-      console.warn("[AetherNote AI Chat API Hook]: Failed to connect to Gemini API. Falling back to local chat simulation.", err);
-      
-      // Trigger a beautiful notification informing the user they are in Demo Mode
-      triggerToast(
-        "Demo Mode Active",
-        "The server Gemini API Key is not configured. Falling back to simulated chat response.",
-        "warning"
-      );
-
-      // Simulate AI thinking and typing response fallback
-      setTimeout(() => {
-        let aiText = "";
-        const lower = messageText.toLowerCase();
-
-        if (lower.includes("hello") || lower.includes("hi")) {
-          aiText = "Hello! I hope you're having an inspiring day. How can I help refine your ideas or draft your notes today?";
-        } else if (lower.includes("summarize") || lower.includes("summary")) {
-          if (activeNote && activeNote.content.trim()) {
-            aiText = `Here's a quick executive summary of "${activeNote.title}":\n\n1. Focuses on organizing structured key ideas with a glassmorphism dark system.\n2. Lays down immediate actionable lists (like checklists and project features).\n3. Emphasizes clean minimal typography to maximize visual clarity and minimize distractions.`;
-          } else {
-            aiText = "It looks like the active note is empty. Paste some text or type inside the main canvas, and I'll summarize it instantly!";
-          }
-        } else if (lower.includes("ideas") || lower.includes("brainstorm")) {
-          aiText = `Here are 3 unique brainstorming directions for your notes:
-- **Visual Mapping Mode**: Transforming lists into an automatic mind-map canvas.
-- **Collaborative Whisper**: Seamless voice-to-text notes with real-time semantic organization.
-- **Dynamic Context Cards**: Automatically fetch relevant links, APIs, or files related to your note keywords.`;
-        } else {
-          aiText = `I've analyzed your prompt: "${messageText}". I can definitely assist with that! 
-If you want to apply updates directly to your active note, try using the **AI Power Bar** at the top of the editor canvas for quick, targeted enhancements. Let me know if you need specific checklists or outlines generated.`;
-        }
-
-        const aiMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          sender: "assistant",
-          text: aiText,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-
-        setAiMessages((prev) => [...prev, aiMsg]);
-        setIsAITyping(false);
-      }, 1500);
-    }
-  };
 
   if (!hasMounted) {
     return (
@@ -462,30 +552,12 @@ If you want to apply updates directly to your active note, try using the **AI Po
           onAIAction={handleEditorAIAction}
           isProcessing={editorProcessingAction}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-
-        {/* Dynamic Glassmorphic Right AI Panel Drawer */}
-        <AIAssistant
-          isOpen={isAIPanelOpen}
-          setIsOpen={setIsAIPanelOpen}
-          messages={aiMessages}
-          onSendMessage={handleSendMessage}
-          isTyping={isAITyping}
+          onToggleTalkMode={handleToggleTalkMode}
+          onSendMessage={handleSendMessageToNote}
+          isAITyping={isConversationTyping}
+          onSaveChatAsNote={handleSaveChatAsNote}
         />
       </div>
-
-      {/* Floating AI Button (Only if Assistant Drawer is closed) */}
-      {!isAIPanelOpen && (
-        <button
-          onClick={() => setIsAIPanelOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 shadow-lg shadow-violet-500/25 border border-violet-400/30 text-white cursor-pointer transition-all duration-300 hover:scale-115 hover:shadow-violet-500/40 hover:rotate-6 active:scale-95 group"
-          title="Open AI Writing Assistant"
-          aria-label="Open AI Assistant"
-        >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-500 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 pointer-events-none"></div>
-          <SparklesIcon className="relative z-10 w-6 h-6 animate-pulse" />
-        </button>
-      )}
 
       {/* Toast Alert Notifications */}
       {toast.show && (

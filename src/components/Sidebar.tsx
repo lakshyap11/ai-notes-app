@@ -1,11 +1,11 @@
-import React from "react";
-import { PlusIcon, TrashIcon, SearchIcon, FileTextIcon, XIcon } from "./Icons";
+import { PlusIcon, TrashIcon, SearchIcon, FileTextIcon, XIcon, MessageSquareIcon } from "./Icons";
 
 interface Note {
   id: string;
   title: string;
   content: string;
   updatedAt: string;
+  type?: "note" | "conversation";
 }
 
 interface SidebarProps {
@@ -134,13 +134,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                   }`}
                 >
                   <div className="flex w-full items-center justify-between gap-2">
-                    <h3
-                      className={`text-xs font-semibold truncate ${
-                        isActive ? "text-white" : "text-zinc-300"
-                      }`}
-                    >
-                      {note.title.trim() === "" ? "Untitled Note" : note.title}
-                    </h3>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {note.type === "conversation" ? (
+                        <MessageSquareIcon size={12} className={isActive ? "text-violet-400 shrink-0" : "text-zinc-500 shrink-0"} />
+                      ) : (
+                        <FileTextIcon size={12} className={isActive ? "text-violet-400 shrink-0" : "text-zinc-500 shrink-0"} />
+                      )}
+                      <h3
+                        className={`text-xs font-semibold truncate ${
+                          isActive ? "text-white" : "text-zinc-300"
+                        }`}
+                      >
+                        {note.title.trim() === "" ? "Untitled Note" : note.title}
+                      </h3>
+                    </div>
                     
                     {/* Delete Action (Shows on hover on desktop, always visible subtly) */}
                     <button
