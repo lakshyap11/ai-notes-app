@@ -417,9 +417,11 @@ textarea, input {
 /* Apple-style editor typography */
 .note-editor {
   font-family: 'SF Pro', sans-serif;
-  letter-spacing: -0.02em;
-  line-height: 1.85;
+  font-size: 18px;
+  line-height: 2;
+  letter-spacing: -0.03em;
   font-weight: 400;
+  color: #f5f5f5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
