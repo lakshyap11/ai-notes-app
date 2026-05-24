@@ -221,14 +221,14 @@ const Editor: React.FC<EditorProps> = ({
 
   if (!activeNote) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-8 bg-[#080d12]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] text-center overflow-hidden relative">
+      <main className="flex-1 flex flex-col items-center justify-center p-8 bg-[#453027]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] text-center overflow-hidden relative">
         {/* Subtle Animated Aurora-Style Background Glow */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[20%] -left-[10%] h-[350px] w-[500px] rounded-full bg-teal-500/8 blur-[100px] animate-aurora-teal" />
           <div className="absolute -bottom-[20%] right-[10%] h-[400px] w-[450px] rounded-full bg-amber-500/5 blur-[110px] animate-aurora-amber" />
         </div>
         {/* Mobile Header Toggle */}
-        <div className="absolute top-0 left-0 w-full h-16 flex items-center px-6 lg:hidden border-b border-white/[0.04] bg-[#09090b]/50 backdrop-blur-md">
+        <div className="absolute top-0 left-0 w-full h-16 flex items-center px-6 lg:hidden border-b border-white/[0.04] bg-[#161316]/50 backdrop-blur-md">
           <button
             onClick={onToggleSidebar}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-white"
@@ -251,7 +251,7 @@ const Editor: React.FC<EditorProps> = ({
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-[#080d12]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] overflow-hidden relative">
+    <main className="flex-1 flex flex-col h-full bg-[#453027]/40 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] overflow-hidden relative">
       {/* Subtle Animated Aurora-Style Background Glow */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] h-[350px] w-[500px] rounded-full bg-teal-500/10 blur-[100px] animate-aurora-teal" />
@@ -477,8 +477,8 @@ const Editor: React.FC<EditorProps> = ({
                       <div
                         className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 text-xs md:text-sm leading-relaxed border transition-all duration-300 ${
                           isUser
-                            ? "bg-[#1c1b1a]/45 border-[#2c2b2a]/30 text-zinc-100 rounded-tr-none shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:border-white/[0.08] hover:bg-[#1c1b1a]/60 glass-panel-light"
-                            : "bg-[#0d1f21]/40 border-teal-500/20 text-zinc-200 rounded-tl-none shadow-[0_0_20px_rgba(20,184,166,0.05)] hover:border-teal-500/30 hover:bg-[#0d1f21]/55 glass-panel-light"
+                            ? "bg-[#453027]/60 border-[#BABABA]/15 text-zinc-100 rounded-tr-none shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:border-white/[0.08] hover:bg-[#453027]/75 glass-panel-light"
+                            : "bg-[#FF6D29]/10 border-[#FF6D29]/25 text-zinc-200 rounded-tl-none shadow-[0_0_20px_rgba(255,109,41,0.06)] hover:border-[#FF6D29]/40 hover:bg-[#FF6D29]/15 glass-panel-light"
                         }`}
                       >
                         {renderBubbleText(msg.text)}
@@ -505,7 +505,7 @@ const Editor: React.FC<EditorProps> = ({
                   <span className="text-[10px] font-sans font-medium text-zinc-500 mb-1.5 px-2 tracking-wider uppercase opacity-60 select-none">
                     Friend
                   </span>
-                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-[#0d1f21]/40 border border-teal-500/20 text-zinc-300 flex items-center gap-1.5 glass-panel-light shadow-[0_0_20px_rgba(20,184,166,0.05)]">
+                  <div className="rounded-2xl rounded-tl-none px-5 py-3.5 bg-[#FF6D29]/10 border border-[#FF6D29]/25 text-zinc-300 flex items-center gap-1.5 glass-panel-light shadow-[0_0_20px_rgba(255,109,41,0.06)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '150ms' }}></span>
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-400/80 animate-bounce" style={{ animationDelay: '300ms' }}></span>
@@ -605,7 +605,7 @@ const Editor: React.FC<EditorProps> = ({
       </div>
 
       {/* Status Bar */}
-      <footer className="flex h-10 shrink-0 items-center justify-between px-6 border-t border-white/[0.04] bg-[#09090b]/30 text-[10px] text-zinc-500 font-mono z-10">
+      <footer className="flex h-10 shrink-0 items-center justify-between px-6 border-t border-white/[0.04] bg-[#161316]/30 text-[10px] text-zinc-500 font-mono z-10">
         <div className="flex items-center gap-4">
           <span>{wordCount} words</span>
           <span>{charCount} characters</span>

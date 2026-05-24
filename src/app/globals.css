@@ -24,13 +24,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b1116; /* deep charcoal dark blue-black with a hint of teal */
-  --foreground: #f4f7f6; /* soft off-white text */
-  --accent-teal: #14b8a6; /* teal accent */
-  --accent-amber: #f59e0b; /* warm amber accent */
-  --glass-bg: rgba(13, 21, 28, 0.75); /* dark teal-charcoal glass background */
-  --glass-border: rgba(255, 255, 255, 0.04);
-  --glass-highlight: rgba(255, 255, 255, 0.015);
+  --background: #161316;
+  --foreground: #FFFFFF;
+  --accent-primary: #FF6D29;
+  --accent-secondary: #BABABA;
+  --surface-card: #453027;
+
+  /* Tailwind configuration fallbacks */
+  --accent-teal: #FF6D29;
+  --accent-amber: #FF6D29;
+  --glass-bg: rgba(69, 48, 39, 0.75); /* surface/cards */
+  --glass-border: rgba(186, 186, 186, 0.15); /* secondary border */
+  --glass-highlight: rgba(255, 255, 255, 0.02);
 }
 
 @theme inline {
@@ -38,6 +43,32 @@
   --color-foreground: var(--foreground);
   --color-accent-teal: var(--accent-teal);
   --color-accent-amber: var(--accent-amber);
+  
+  --color-teal-500: #FF6D29;
+  --color-teal-400: #FF6D29;
+  --color-teal-600: #FF6D29;
+  --color-teal-300: #FF6D29;
+  --color-teal-950: #453027;
+  --color-emerald-500: #FF6D29;
+  --color-emerald-600: #FF6D29;
+  --color-amber-500: #FF6D29;
+  --color-amber-400: #FF6D29;
+  --color-amber-600: #FF6D29;
+  --color-amber-950: #453027;
+  --color-orange-500: #FF6D29;
+  --color-orange-600: #FF6D29;
+  --color-violet-650: #FF6D29;
+  --color-violet-600: #FF6D29;
+  --color-indigo-500: #FF6D29;
+  
+  --color-zinc-400: #BABABA;
+  --color-zinc-500: #BABABA;
+  --color-zinc-650: #888888;
+  --color-zinc-600: #888888;
+  --color-zinc-300: #FFFFFF;
+  --color-zinc-200: #FFFFFF;
+  --color-zinc-100: #FFFFFF;
+  
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
@@ -75,33 +106,33 @@ h1, h2, h3, .logo-text, .serif-heading {
 
 /* Premium Text Selection & Caret Styling */
 ::selection {
-  background-color: rgba(20, 184, 166, 0.2); /* elegant teal selection bloom */
+  background-color: rgba(255, 109, 41, 0.25); /* elegant orange selection bloom */
   color: #ffffff;
 }
 
 textarea, input {
-  caret-color: var(--accent-teal); /* elegant teal caret */
+  caret-color: var(--accent-primary); /* elegant orange caret */
 }
 
 /* Caret amber for conversational modes */
 .caret-amber textarea, .caret-amber input, .caret-amber-all {
-  caret-color: var(--accent-amber) !important;
+  caret-color: var(--accent-primary) !important;
 }
 
 /* Glassmorphism utility classes */
 .glass-panel {
-  background: rgba(8, 14, 18, 0.72); /* deep translucent obsidian-teal backdrop */
+  background: rgba(69, 48, 39, 0.75); /* translucent roasted brown card backdrop */
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(186, 186, 186, 0.15); /* secondary silver border */
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0px 0 rgba(255, 255, 255, 0.015);
 }
 
 .glass-panel-light {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(69, 48, 39, 0.25); /* lighter card surface */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(186, 186, 186, 0.1);
   box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.01), 0 4px 20px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -109,7 +140,7 @@ textarea, input {
 .editor-spotlight {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 28%, rgba(20, 184, 166, 0.045), transparent 65%);
+  background: radial-gradient(circle at 50% 28%, rgba(255, 109, 41, 0.05), transparent 65%);
   pointer-events: none;
   z-index: 1;
 }
@@ -144,19 +175,19 @@ textarea, input {
 
 /* Cinematic background glows */
 .radial-glow-teal {
-  background: radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.09), transparent 60%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 109, 41, 0.09), transparent 60%);
 }
 
 .radial-glow-amber {
-  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.06), transparent 50%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 109, 41, 0.06), transparent 50%);
 }
 
 .radial-glow-deep-teal {
-  background: radial-gradient(circle at 50% 50%, rgba(15, 118, 110, 0.12), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 109, 41, 0.12), transparent 70%);
 }
 
 .radial-glow-warm-amber {
-  background: radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.08), transparent 65%);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 109, 41, 0.08), transparent 65%);
 }
 
 /* Custom typing cursor animations for AI assistant */
@@ -256,7 +287,7 @@ textarea, input {
 .cinematic-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 20%, rgba(4, 7, 10, 0.5) 70%, rgba(2, 4, 6, 0.9) 100%);
+  background: radial-gradient(circle at center, transparent 20%, rgba(22, 19, 22, 0.4) 70%, rgba(22, 19, 22, 0.95) 100%);
   pointer-events: none;
   z-index: 2;
 }

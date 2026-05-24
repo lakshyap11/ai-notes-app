@@ -580,9 +580,9 @@ export default function Home() {
 
   if (!hasMounted) {
     return (
-      <div className="relative flex h-screen w-full bg-[#05090c] text-[#f4f7f6] font-sans items-center justify-center overflow-hidden">
+      <div className="relative flex h-screen w-full bg-[#161316] text-[#f4f7f6] font-sans items-center justify-center overflow-hidden">
         {/* Cinematic Immersive Sanctuary Background System */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#05090c]">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#161316]">
           {/* Animated film-grain texture overlay */}
           <div className="noise-overlay" />
           
@@ -613,9 +613,9 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex h-screen w-full bg-[#05090c] text-[#f4f7f6] font-sans overflow-hidden">
+    <div className="relative flex h-screen w-full bg-[#161316] text-[#f4f7f6] font-sans overflow-hidden">
       {/* Cinematic Immersive Sanctuary Background System */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#05090c]">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#161316]">
         {/* Animated film-grain texture overlay */}
         <div className="noise-overlay" />
         

@@ -14,10 +14,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
   };
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-[#080d12]/30 backdrop-blur-2xl border-l border-white/[0.02] shadow-[-8px_0_32px_rgba(0,0,0,0.3)] overflow-y-auto z-0 relative scrollbar-none scroll-smooth">
+    <main className="flex-1 flex flex-col h-full bg-[#453027]/30 backdrop-blur-2xl border-l border-[#BABABA]/15 shadow-[-8px_0_32px_rgba(0,0,0,0.3)] overflow-y-auto z-0 relative scrollbar-none scroll-smooth">
       {/* Mobile Header Toggle */}
       {onToggleSidebar && (
-        <div className="absolute top-0 left-0 w-full h-16 flex items-center px-6 lg:hidden border-b border-white/[0.04] bg-[#09090b]/50 backdrop-blur-md z-30">
+        <div className="absolute top-0 left-0 w-full h-16 flex items-center px-6 lg:hidden border-b border-[#BABABA]/10 bg-[#161316]/50 backdrop-blur-md z-30">
           <button
             onClick={onToggleSidebar}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-white cursor-pointer active:scale-95"
@@ -83,7 +83,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Feature 1: Smart Notes */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#453027]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <FileTextIcon size={18} />
               </div>
@@ -94,7 +94,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
             </div>
 
             {/* Feature 2: Refine Draft */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#453027]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <SparklesIcon size={18} />
               </div>
@@ -105,7 +105,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
             </div>
 
             {/* Feature 3: Summarize */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#453027]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <AlignLeftIcon size={18} />
               </div>
@@ -116,7 +116,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
             </div>
 
             {/* Feature 4: Formal Polish */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#453027]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <EyeIcon size={18} />
               </div>
@@ -127,7 +127,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
             </div>
 
             {/* Feature 5: Autocomplete */}
-            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#081014]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
+            <div className="group rounded-2xl p-6 border border-white/[0.03] bg-white/[0.01] hover:bg-[#453027]/50 hover:border-teal-500/20 transition-all duration-500 space-y-4 shadow-lg shadow-black/10 glass-panel-light hover:shadow-[0_8px_30px_rgba(20,184,166,0.05)]">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
                 <ZapIcon size={18} />
               </div>
@@ -138,7 +138,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onStartWriting, onToggleSidebar
             </div>
 
             {/* Feature 6: Talk Mode - MOST IMPORTANT */}
-            <div className="group col-span-1 md:col-span-2 lg:col-span-3 rounded-2xl p-6 border border-amber-500/20 bg-amber-500/[0.01] hover:bg-[#121008]/40 hover:border-amber-500/40 transition-all duration-500 space-y-5 shadow-lg shadow-amber-950/5 glass-panel-light relative overflow-hidden hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]">
+            <div className="group col-span-1 md:col-span-2 lg:col-span-3 rounded-2xl p-6 border border-amber-500/20 bg-amber-500/[0.01] hover:bg-[#453027]/40 hover:border-amber-500/40 transition-all duration-500 space-y-5 shadow-lg shadow-amber-950/5 glass-panel-light relative overflow-hidden hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)]">
               <div className="absolute -top-16 -right-16 h-36 w-36 rounded-full bg-amber-500/[0.03] blur-2xl group-hover:bg-amber-500/[0.06] transition-colors pointer-events-none"></div>
               
               <div className="flex items-center gap-3">
