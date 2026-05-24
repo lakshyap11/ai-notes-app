@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { PlusIcon, TrashIcon, SearchIcon, FileTextIcon, XIcon, MessageSquareIcon, SparklesIcon } from "./Icons";
 
 interface Note {
@@ -22,6 +23,8 @@ interface SidebarProps {
   setIsOpen: (isOpen: boolean) => void;
   isOnboarding: boolean;
   onToggleOnboarding: (show: boolean) => void;
+  memories?: any[];
+  onDeleteMemory?: (id: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -37,7 +40,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   setIsOpen,
   isOnboarding,
   onToggleOnboarding,
+  memories = [],
+  onDeleteMemory,
 }) => {
+  const [isMemoryExpanded, setIsMemoryExpanded] = useState<boolean>(false);
   // Filter notes based on the search query
   const filteredNotes = notes.filter((note) => {
     const q = searchQuery.toLowerCase();
@@ -152,6 +158,92 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
             {isOnboarding && (
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+            )}
+          </div>
+          
+          {/* Collapsible Memory Sanctuary Drawer */}
+          <div className="group/memory relative rounded-xl border border-white/[0.03] bg-white/[0.01] overflow-hidden transition-all duration-300 mb-3 select-none">
+            {/* Header Trigger */}
+            <div 
+              onClick={() => setIsMemoryExpanded(!isMemoryExpanded)}
+              className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className={`flex h-6 w-6 items-center justify-center rounded-lg border transition-all duration-350 bg-amber-500/10 border-amber-500/25 text-amber-400`}>
+                  <SparklesIcon size={12} className={isMemoryExpanded ? "animate-spin" : "animate-pulse"} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs font-semibold text-zinc-350 group-hover/memory:text-white flex items-center gap-1.5">
+                    Memory Sanctuary
+                    {memories && memories.length > 0 && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono scale-90">
+                        {memories.length}
+                      </span>
+                    )}
+                  </h3>
+                </div>
+              </div>
+              <span className="text-zinc-500 text-[10px] group-hover/memory:text-zinc-300 font-sans tracking-wide">
+                {isMemoryExpanded ? "Hide" : "Show"}
+              </span>
+            </div>
+
+            {/* Expanded List Panel */}
+            {isMemoryExpanded && (
+              <div className="px-3.5 pb-3.5 space-y-2 border-t border-white/[0.02] bg-[#453027]/10 max-h-[220px] overflow-y-auto scrollbar-none">
+                {(!memories || memories.length === 0) ? (
+                  <p className="text-[10px] text-zinc-500 italic text-center py-4 px-2">
+                    Your reflections and emotional goals will form memories here over time.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5 pt-2">
+                    {memories.map((mem) => {
+                      const colors: Record<string, string> = {
+                        stressor: "bg-red-950/20 border-red-500/30 text-red-300",
+                        goal: "bg-orange-950/20 border-orange-500/30 text-orange-300",
+                        habit: "bg-teal-950/20 border-teal-500/30 text-teal-300",
+                        emotion: "bg-violet-950/20 border-violet-500/30 text-violet-300",
+                        reflection: "bg-amber-950/20 border-amber-500/30 text-amber-300",
+                        relationship: "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                      };
+                      
+                      const badgeClass = colors[mem.type] || "bg-stone-900/20 border-stone-700/30 text-stone-300";
+                      
+                      return (
+                        <div 
+                          key={mem.id}
+                          className="group/memitem flex items-center justify-between gap-2.5 rounded-lg border border-white/[0.02] bg-white/[0.005] p-2 hover:border-white/[0.05] hover:bg-white/[0.015] transition-all"
+                        >
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[8px] font-mono font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${badgeClass} select-none`}>
+                                {mem.type}
+                              </span>
+                              {mem.importance >= 8 && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse" title="High significance memory" />
+                              )}
+                            </div>
+                            <p className="text-[10px] leading-relaxed text-zinc-350 group-hover/memitem:text-zinc-200">
+                              {mem.summary}
+                            </p>
+                          </div>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteMemory && onDeleteMemory(mem.id);
+                            }}
+                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-[#453027]/40 border border-transparent hover:border-red-500/25 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 opacity-0 group-hover/memitem:opacity-100 transition-all active:scale-95 cursor-pointer"
+                            title="Let the AI forget this"
+                          >
+                            <TrashIcon size={10} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
           </div>
           

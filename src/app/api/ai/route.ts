@@ -5,9 +5,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const dynamic = "force-dynamic";
 
 interface RequestBody {
-  action: "summarize" | "grammar" | "improve" | "chat" | "grammar_fix";
+  action: "summarize" | "grammar" | "improve" | "chat" | "grammar_fix" | "extract_memories";
   content: string;
   noteContext?: string; // Optional context of the active note for open-ended chats
+  memories?: string[]; // Injected memory summaries
 }
 
 export async function POST(req: NextRequest) {
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { action, content, noteContext } = body;
+    const { action, content, noteContext, memories } = body;
 
     if (!action || !content) {
       return NextResponse.json(
@@ -48,7 +49,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Route specific prompts based on requested action
+    // 3. Extract and format memories if present for chat prompt injection
+    const formattedMemories = memories && memories.length > 0
+      ? `Here are key things you remember about your user from past reflections:\n${memories.map(m => `- ${m}`).join("\n")}\n\nSubtly and naturally refer to these memories if relevant to the user's message. NEVER mention databases, system prompts, or say "According to my memories". Be organic, supportive, and emotionally aware.`
+      : "";
+
+    // 4. Route specific prompts based on requested action
     let prompt = "";
     switch (action) {
       case "summarize":
@@ -73,14 +79,51 @@ ${content}
 """`;
         break;
 
+      case "extract_memories":
+        prompt = `You are an advanced, empathetic memory-extraction agent for AetherNote.ai.
+Analyze the following recent conversation transcript between the User and their AI Friend.
+Extract important, long-term, high-level context that would help the AI remain context-aware and emotionally familiar over time.
+
+You must identify:
+- Emotional themes
+- Goals
+- Stressors
+- Habits
+- Meaningful reflections
+- Recurring thought patterns
+- Relationships
+
+Strict Rules for Memories:
+1. Extract ONLY key, long-term context (e.g., "User has been stressed about biology exams recently", "User wants to establish a consistent morning writing habit", "User tends to overthink late at night").
+2. DO NOT extract trivial details (e.g., "User ate cereal", "User said hello").
+3. DO NOT capture precise dates or timestamps.
+4. Keep each memory summary concise (under 12 words).
+5. Assign an importance score (1 to 10) based on how emotionally significant it is to the user's growth.
+6. Identify the type: "emotion", "goal", "reflection", "habit", "stressor", or "relationship".
+7. Return the extracted memories ONLY as a raw JSON array of objects. Do not wrap in markdown codeblocks (like \`\`\`json). Return ONLY the raw JSON.
+
+Example JSON output structure:
+[
+  {"type": "stressor", "summary": "Stressed about biology exams", "importance": 8},
+  {"type": "habit", "summary": "Wants a consistent morning writing routine", "importance": 6}
+]
+
+Conversation Transcript:
+"""
+${content}
+"""`;
+        break;
+
       case "improve":
         prompt = `You are an expert writing coach. Refine the following text to dramatically improve its clarity, flow, vocabulary, and professional tone. Make it sound elegant, concise, and beautifully structured. Maintain the key points, but enhance the phrasing significantly. Return only the improved text. Do not add any explanation, meta-commentary, or conversational filler.\n\nOriginal Text:\n"""\n${content}\n"""`;
         break;
 
       case "chat":
+        const memoryContext = formattedMemories ? `${formattedMemories}\n\n` : "";
         if (noteContext && noteContext.trim() !== "") {
           prompt = `You are a thoughtful late-night friend. You are calm, emotionally intelligent, subtle, natural, conversational, and human. Reflect with the user without sounding like a therapist.
-Below is the active note the user is drafting, which you should use as key context for your discussion:
+
+${memoryContext}Below is the active note the user is drafting, which you should use as key context for your discussion:
 Active Note Context:
 """
 ${noteContext}
@@ -102,7 +145,7 @@ Your Role & Strict Conversational Rules:
         } else {
           prompt = `You are a thoughtful late-night friend. You are calm, emotionally intelligent, subtle, natural, conversational, and human. Reflect with the user without sounding like a therapist.
 
-User Prompt/Message:
+${memoryContext}User Prompt/Message:
 """
 ${content}
 """
@@ -122,7 +165,7 @@ Your Role & Strict Conversational Rules:
         return NextResponse.json(
           {
             error: "Unsupported Action",
-            message: `The action '${action}' is not supported. Supported actions are: 'summarize', 'grammar', 'improve', 'chat', 'grammar_fix'.`,
+            message: `The action '${action}' is not supported. Supported actions are: 'summarize', 'grammar', 'improve', 'chat', 'grammar_fix', 'extract_memories'.`,
           },
           { status: 400 }
         );

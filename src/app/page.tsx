@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import Editor from "@/components/Editor";
 import Onboarding from "@/components/Onboarding";
 import Toast from "@/components/Toast";
+import { getMemories, addOrMergeMemories, getRelevantMemories, deleteMemory, Memory } from "@/utils/memoryService";
 
 interface Note {
   id: string;
@@ -87,6 +88,98 @@ export default function Home() {
   // Inline editor AI action loading state
   const [editorProcessingAction, setEditorProcessingAction] = useState<string | null>(null);
 
+  // Conversational Memory System State
+  const [memories, setMemories] = useState<Memory[]>([]);
+
+  // Trigger memory extraction in the background
+  const triggerMemoryExtraction = async (chatMessages: ChatMessage[]) => {
+    if (chatMessages.length < 2) return;
+    
+    // Take recent transcript (up to last 6 messages)
+    const recent = chatMessages.slice(-6);
+    const formattedTranscript = recent
+      .map((msg) => `${msg.sender === "user" ? "User" : "AI Friend"}: ${msg.text}`)
+      .join("\n");
+      
+    try {
+      console.log("[Memory Extraction]: Requesting background extraction...");
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "extract_memories",
+          content: formattedTranscript
+        })
+      });
+      
+      if (!res.ok) throw new Error("Failed to extract memories");
+      
+      const data = await res.json();
+      const responseText = data.response;
+      
+      let extracted: Omit<Memory, "id" | "createdAt" | "updatedAt">[] = [];
+      try {
+        const cleanedText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        extracted = JSON.parse(cleanedText);
+      } catch (parseErr) {
+        console.warn("[Memory Extraction]: Could not parse JSON array directly, trying regex...", parseErr);
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          extracted = JSON.parse(jsonMatch[0]);
+        }
+      }
+      
+      if (Array.isArray(extracted) && extracted.length > 0) {
+        const prunedAndMerged = addOrMergeMemories(extracted);
+        setMemories(prunedAndMerged);
+        console.log(`[Memory Extraction]: Extracted and updated memory index.`);
+      }
+    } catch (err) {
+      console.warn("[Memory Extraction]: Background extraction failed, running keyword heuristics fallback...", err);
+      // Offline/demo keyword-based memory extraction simulation
+      const lastUserMessage = chatMessages.filter(m => m.sender === "user").pop();
+      if (lastUserMessage) {
+        const text = lastUserMessage.text.toLowerCase();
+        let simulatedMemories: Omit<Memory, "id" | "createdAt" | "updatedAt">[] = [];
+        
+        if (text.includes("stressed") || text.includes("exam") || text.includes("biology") || text.includes("study") || text.includes("class") || text.includes("test")) {
+          simulatedMemories.push({
+            type: "stressor",
+            summary: text.includes("exam") || text.includes("biology") ? "Stressed about upcoming biology exam" : "Anxious about academic exams",
+            importance: 8
+          });
+        }
+        if (text.includes("sleep") || text.includes("tired") || text.includes("night") || text.includes("doomscroll") || text.includes("screen")) {
+          simulatedMemories.push({
+            type: "habit",
+            summary: "Tends to stay up late doomscrolling",
+            importance: 7
+          });
+        }
+        if (text.includes("goal") || text.includes("discipline") || text.includes("habit") || text.includes("routine") || text.includes("structure") || text.includes("write")) {
+          simulatedMemories.push({
+            type: "goal",
+            summary: "Wants to build daily discipline and structure",
+            importance: 6
+          });
+        }
+        if (text.includes("friend") || text.includes("family") || text.includes("relationship") || text.includes("lonely") || text.includes("argument")) {
+          simulatedMemories.push({
+            type: "relationship",
+            summary: "Wants healthy boundaries and relationships",
+            importance: 7
+          });
+        }
+        
+        if (simulatedMemories.length > 0) {
+          const prunedAndMerged = addOrMergeMemories(simulatedMemories);
+          setMemories(prunedAndMerged);
+          console.log("[Memory Extraction Simulation]: Successfully extracted keyword memories offline.");
+        }
+      }
+    }
+  };
+
   // Onboarding display state
   const [isOnboarding, setIsOnboarding] = useState<boolean>(false);
 
@@ -112,6 +205,11 @@ export default function Home() {
   // Handle initial hydration & loading from localStorage
   useEffect(() => {
     setHasMounted(true);
+    
+    // Load memories
+    const loadedMemories = getMemories();
+    setMemories(loadedMemories);
+
     const savedNotes = localStorage.getItem("aethernote_notes");
     const savedActiveId = localStorage.getItem("aethernote_active_id");
     const hasOnboarded = localStorage.getItem("aethernote_onboarded");
@@ -399,6 +497,10 @@ export default function Home() {
 
     setIsConversationTyping(true);
 
+    // Fetch relevant memories for prompt injection
+    const relevant = getRelevantMemories(messageText, activeNote.content || "", 3);
+    const injectedMemories = relevant.map((m) => m.summary);
+
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
@@ -407,6 +509,7 @@ export default function Home() {
           action: "chat",
           content: messageText,
           noteContext: activeNote.content || "", // Pass standard text content as context!
+          memories: injectedMemories // Context injection
         }),
       });
 
@@ -425,8 +528,12 @@ export default function Home() {
       };
 
       // 2. Append AI response to note state
-      handleUpdateNote({ messages: [...updatedMessagesWithUser, aiMsg] });
+      const updatedMessagesWithAI = [...updatedMessagesWithUser, aiMsg];
+      handleUpdateNote({ messages: updatedMessagesWithAI });
       setIsConversationTyping(false);
+
+      // Trigger memory extraction in the background
+      triggerMemoryExtraction(updatedMessagesWithAI);
 
     } catch (err: any) {
       console.warn("[AetherNote Inline Chat Hook]: Failed to connect to Gemini API. Falling back to local reflection.", err);
@@ -447,12 +554,24 @@ export default function Home() {
         } else if (lower.includes("summarize") || lower.includes("summary") || lower.includes("archive")) {
           aiText = `Looking back at our chat about "${activeNote.title}", it feels like you're mostly trying to process the big picture and find some clear space to breathe. Let me know if that sounds about right.`;
         } else {
-          if (lower.includes("sad") || lower.includes("bad") || lower.includes("tired") || lower.includes("hard") || lower.includes("stuck")) {
-            aiText = `Yeah… that sounds really draining, honestly. You've probably been holding onto that stress for too long. Want to write it out?`;
-          } else if (lower.includes("happy") || lower.includes("excited") || lower.includes("good") || lower.includes("cool")) {
-            aiText = `Honestly, that's awesome to hear. Sounds like things are finally clicking. What do you think made the difference?`;
+          // If we have relevant memories, check if we should subtly recall one!
+          if (relevant.length > 0) {
+            const mem = relevant[0];
+            if (mem.type === "stressor") {
+              aiText = `Yeah… that sounds tough. And since you've been carrying that stress about ${mem.summary.toLowerCase().replace("stressed about", "").replace("anxious about", "").trim()} lately, it probably feels twice as heavy. Want to write it out?`;
+            } else if (mem.type === "goal") {
+              aiText = `Honestly, that makes sense. It fits right into what you mentioned about wanting to ${mem.summary.toLowerCase().replace("wants to", "").replace("goal to", "").trim()}. Small steps, right?`;
+            } else {
+              aiText = `Yeah... that makes sense honestly. Knowing how you've been focusing on your ${mem.type} patterns lately, this feels pretty connected. What do you think?`;
+            }
           } else {
-            aiText = `Yeah... that makes sense honestly. That kind of thing can stay in your head for hours. What do you think is driving that thought?`;
+            if (lower.includes("sad") || lower.includes("bad") || lower.includes("tired") || lower.includes("hard") || lower.includes("stuck")) {
+              aiText = `Yeah… that sounds really draining, honestly. You've probably been holding onto that stress for too long. Want to write it out?`;
+            } else if (lower.includes("happy") || lower.includes("excited") || lower.includes("good") || lower.includes("cool")) {
+              aiText = `Honestly, that's awesome to hear. Sounds like things are finally clicking. What do you think made the difference?`;
+            } else {
+              aiText = `Yeah... that makes sense honestly. That kind of thing can stay in your head for hours. What do you think is driving that thought?`;
+            }
           }
         }
 
@@ -463,8 +582,12 @@ export default function Home() {
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
 
-        handleUpdateNote({ messages: [...updatedMessagesWithUser, aiMsg] });
+        const updatedMessagesWithAI = [...updatedMessagesWithUser, aiMsg];
+        handleUpdateNote({ messages: updatedMessagesWithAI });
         setIsConversationTyping(false);
+
+        // Trigger memory extraction fallback
+        triggerMemoryExtraction(updatedMessagesWithAI);
       }, 1500);
     }
   };
@@ -663,6 +786,8 @@ export default function Home() {
           setIsOpen={setIsSidebarOpen}
           isOnboarding={isOnboarding}
           onToggleOnboarding={setIsOnboarding}
+          memories={memories}
+          onDeleteMemory={(id) => setMemories(deleteMemory(id))}
         />
 
         {/* Main Note Editor Canvas OR Onboarding/Welcome page */}
