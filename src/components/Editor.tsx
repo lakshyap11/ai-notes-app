@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MenuIcon, SparklesIcon, AlignLeftIcon, ZapIcon, EyeIcon, MessageSquareIcon, SendIcon, PaperclipIcon } from "./Icons";
+import { MenuIcon, SparklesIcon, AlignLeftIcon, ZapIcon, EyeIcon, MessageSquareIcon, SendIcon, PaperclipIcon, CheckIcon } from "./Icons";
 import { AttachmentCard, AttachmentStripCard, FullscreenImageModal } from "./AttachmentSystem";
 
 interface Note {
@@ -310,6 +310,19 @@ const Editor: React.FC<EditorProps> = ({
               >
                 <SparklesIcon size={11} className={isProcessing === "refine" ? "animate-spin" : ""} />
                 <span>{isProcessing === "refine" ? "Refining..." : "Refine Draft"}</span>
+              </button>
+
+              <button
+                onClick={() => onAIAction("grammar_fix")}
+                disabled={!!isProcessing}
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-300 btn-premium-sweep hover:scale-[1.03] active:scale-[0.97] cursor-pointer disabled:opacity-50 shadow-md ${
+                  isProcessing === "grammar_fix"
+                    ? "bg-teal-950/30 border border-teal-500/40 text-teal-300 shimmer-effect relative overflow-hidden"
+                    : "bg-white/[0.02] border border-white/[0.04] text-zinc-300 hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-300"
+                }`}
+              >
+                <CheckIcon size={11} className={isProcessing === "grammar_fix" ? "animate-pulse" : ""} />
+                <span>{isProcessing === "grammar_fix" ? "Fixing..." : "Fix Grammar"}</span>
               </button>
 
               <button

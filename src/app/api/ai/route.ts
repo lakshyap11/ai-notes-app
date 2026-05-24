@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const dynamic = "force-dynamic";
 
 interface RequestBody {
-  action: "summarize" | "grammar" | "improve" | "chat";
+  action: "summarize" | "grammar" | "improve" | "chat" | "grammar_fix";
   content: string;
   noteContext?: string; // Optional context of the active note for open-ended chats
 }
@@ -59,6 +59,20 @@ export async function POST(req: NextRequest) {
         prompt = `You are a professional editor. Please proofread the following text for spelling, grammar, punctuation, and sentence phrasing errors. Fix all mistakes while keeping the core meaning, original perspective, and structure intact. Return only the corrected text. Do not add any explanation, meta-commentary, or conversational filler.\n\nOriginal Text:\n"""\n${content}\n"""`;
         break;
 
+      case "grammar_fix":
+        prompt = `You are a minimally invasive editor. Your task is ONLY to correct spelling mistakes, punctuation errors, typos, and minor grammatical issues in the text below.
+Strict Rules:
+1. DO NOT rewrite the text heavily.
+2. DO NOT change the emotional tone, vocabulary level, or conversational personality.
+3. Keep the writing style casual, raw, and authentic to the user's voice.
+4. Return ONLY the corrected text. Do not add any introduction, explanations, meta-commentary, or conversational filler.
+
+Text to Correct:
+"""
+${content}
+"""`;
+        break;
+
       case "improve":
         prompt = `You are an expert writing coach. Refine the following text to dramatically improve its clarity, flow, vocabulary, and professional tone. Make it sound elegant, concise, and beautifully structured. Maintain the key points, but enhance the phrasing significantly. Return only the improved text. Do not add any explanation, meta-commentary, or conversational filler.\n\nOriginal Text:\n"""\n${content}\n"""`;
         break;
@@ -108,7 +122,7 @@ Your Role & Strict Conversational Rules:
         return NextResponse.json(
           {
             error: "Unsupported Action",
-            message: `The action '${action}' is not supported. Supported actions are: 'summarize', 'grammar', 'improve', 'chat'.`,
+            message: `The action '${action}' is not supported. Supported actions are: 'summarize', 'grammar', 'improve', 'chat', 'grammar_fix'.`,
           },
           { status: 400 }
         );

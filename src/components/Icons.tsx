@@ -343,3 +343,21 @@ export const DownloadIcon: React.FC<IconProps> = ({ size = 16, className, ...pro
     <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
+
+export const CheckIcon: React.FC<IconProps> = ({ size = 16, className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);

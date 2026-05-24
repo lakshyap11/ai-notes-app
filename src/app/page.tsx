@@ -502,11 +502,12 @@ export default function Home() {
     setEditorProcessingAction(action);
     
     // Map visual action to backend action names
-    const actionMap: Record<string, "summarize" | "grammar" | "improve" | "chat"> = {
+    const actionMap: Record<string, "summarize" | "grammar" | "improve" | "chat" | "grammar_fix"> = {
       summarize: "summarize",
       refine: "improve",
       autocomplete: "chat",
       professional: "grammar",
+      grammar_fix: "grammar_fix",
     };
     
     const apiAction = actionMap[action] || "improve";
@@ -540,7 +541,7 @@ export default function Home() {
       let finalContent = "";
       if (action === "summarize") {
         finalContent = `${activeNote.content}\n\n---\n### 🧠 AI Summary:\n${generatedText}`;
-      } else if (action === "refine" || action === "professional") {
+      } else if (action === "refine" || action === "professional" || action === "grammar_fix") {
         finalContent = generatedText;
       } else if (action === "autocomplete") {
         finalContent = `${activeNote.content}\n\n${generatedText}`;
@@ -569,6 +570,14 @@ export default function Home() {
           finalContent = `${activeNote.content}\n\nIn addition to these core goals, the next step involves refining user flows and initiating dark mode accessibility styling parameters to deliver a truly world-class UI.`;
         } else if (action === "professional") {
           finalContent = `**EXECUTIVE BRIEF: ${activeNote.title.toUpperCase()}**\n\n${activeNote.content}\n\n*STATUS: Approved for standard development operations.*`;
+        } else if (action === "grammar_fix") {
+          // Minimal spell check simulation
+          const cleanedText = activeNote.content
+            .replace(/\bteh\b/g, "the")
+            .replace(/\breceved\b/g, "received")
+            .replace(/\bmispell\b/g, "misspell")
+            .replace(/\bgrammer\b/g, "grammar");
+          finalContent = cleanedText;
         }
         
         streamTextToEditor(activeNote.content, finalContent);
