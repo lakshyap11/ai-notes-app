@@ -610,7 +610,7 @@ const Editor: React.FC<EditorProps> = ({
                 value={activeNote.content}
                 onChange={(e) => onUpdateNote({ content: e.target.value })}
                 placeholder="Start writing or typing '/' for commands..."
-              className="note-editor relative z-10 w-full h-full bg-transparent text-sm md:text-base leading-relaxed text-zinc-300 placeholder-zinc-600 outline-none resize-none focus:placeholder-zinc-500 min-h-[300px]"  className="relative z-10 w-full h-full bg-transparent text-sm md:text-base leading-relaxed text-zinc-300 placeholder-zinc-600 outline-none resize-none focus:placeholder-zinc-500 font-sans min-h-[300px]"
+              className="note-editor relative z-10 w-full h-full bg-transparent text-sm md:text-base leading-relaxed text-zinc-300 placeholder-zinc-600 outline-none resize-none focus:placeholder-zinc-500 min-h-[300px]" 
               />
             </div>
           </div>
